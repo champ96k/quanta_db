@@ -3,10 +3,9 @@ import 'dart:typed_data';
 
 /// A memory table that stores key-value pairs in a sorted order using SplayTreeMap
 class MemTable {
+  MemTable() : _table = SplayTreeMap(_compareBytes);
   final SplayTreeMap<Uint8List, Uint8List> _table;
   int _size = 0;
-
-  MemTable() : _table = SplayTreeMap(_compareBytes);
 
   /// Add a key-value pair to the memtable
   void put(Uint8List key, Uint8List value) {

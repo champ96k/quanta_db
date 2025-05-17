@@ -1,0 +1,22 @@
+targets:
+  $default:
+    builders:
+      quanta_db|quanta_generator:
+        enabled: true
+        generate_for:
+          include:
+            - lib/**.dart
+            - example/**.dart
+          exclude:
+            - lib/annotations/**.dart
+            - lib/src/generator/**.dart
+
+builders:
+  quanta_generator:
+    import: "package:quanta_db/builder.dart"
+    builder_factories: ["quantaBuilder"]
+    build_extensions: {".dart": [".g.dart"]}
+    auto_apply: root_package
+    build_to: source
+    required_inputs: [".dart"]
+    runs_before: ["build_web_compilers|entrypoint"] 

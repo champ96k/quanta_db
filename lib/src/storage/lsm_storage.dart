@@ -7,31 +7,29 @@ import 'sstable.dart';
 
 /// Configuration for the LSM storage engine
 class LSMConfig {
-  final String dataDir;
-  final int maxMemTableSize;
-  final int maxLevelSize;
-  final int maxLevels;
-
   const LSMConfig({
     required this.dataDir,
     this.maxMemTableSize = 64 * 1024 * 1024, // 64MB
     this.maxLevelSize = 256 * 1024 * 1024, // 256MB
     this.maxLevels = 7,
   });
+  final String dataDir;
+  final int maxMemTableSize;
+  final int maxLevelSize;
+  final int maxLevels;
 }
 
 /// The main LSM-Tree storage engine
 class LSMStorage {
+  LSMStorage(this.config)
+      : _memTable = MemTable(),
+        _levels = List.generate(config.maxLevels, (_) => []);
   final LSMConfig config;
   MemTable _memTable;
   final List<List<SSTable>> _levels;
   int _nextTableId = 0;
   final _compactionPort = ReceivePort();
   Isolate? _compactionIsolate;
-
-  LSMStorage(this.config)
-      : _memTable = MemTable(),
-        _levels = List.generate(config.maxLevels, (_) => []);
 
   /// Initialize the storage engine
   Future<void> init() async {

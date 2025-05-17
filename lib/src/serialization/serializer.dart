@@ -65,10 +65,9 @@ class BoolSerializer implements Serializer<bool> {
 
 /// Serializer for Map values
 class MapSerializer<K, V> implements Serializer<Map<K, V>> {
+  MapSerializer(this.keySerializer, this.valueSerializer);
   final Serializer<K> keySerializer;
   final Serializer<V> valueSerializer;
-
-  MapSerializer(this.keySerializer, this.valueSerializer);
 
   @override
   Uint8List serialize(Map<K, V> value) {

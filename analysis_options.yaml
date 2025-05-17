@@ -1,4 +1,89 @@
 include: package:flutter_lints/flutter.yaml
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+analyzer:
+
+  strong-mode:
+    implicit-casts: true
+    implicit-dynamic: true
+
+  exclude:
+    - "lib/generated_plugin_registrant.dart"
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+  errors:
+    # treat missing required parameters as a error (not a hint)
+    missing_required_param: error
+    # treat missing returns as a warning (not a hint)
+    missing_return: warning
+    unused_import: error
+    
+    # Avoid unnecessary containers.
+    avoid_unnecessary_containers: warning
+
+    #Avoid calling toString() on runtimeType.
+    no_runtimeType_toString: warning
+
+    #Don't use null check on a potentially nullable type parameter.
+    null_check_on_nullable_type_parameter: warning
+
+    # Don't explicitly initialize variables to null.
+    avoid_init_to_null: warning
+
+    #Avoid async functions that return void.
+    avoid_void_async: warning
+
+    #Cancel instances of dart.async.StreamSubscription.
+    cancel_subscriptions: warning
+
+    #Close instances of dart.core.Sink.
+    close_sinks: warning
+
+    deprecated_member_use: warning
+    depend_on_referenced_packages: ignore
+
+linter:
+  rules:
+    #Prefer const with constant constructors.
+    prefer_const_constructors: true
+
+    #Avoid setters without getters.
+    avoid_setters_without_getters: true
+
+    #Declare method return types.
+    always_declare_return_types: true
+
+    #Don't import implementation files from another package.
+    implementation_imports: true
+
+    #Don't specify the late modifier when it is not needed.
+    unnecessary_late: true
+
+    #Avoid .toString() in production code since results may be minified.
+    avoid_type_to_string: true
+
+    avoid_classes_with_only_static_members: true
+    avoid_field_initializers_in_const_classes: true
+    avoid_function_literals_in_foreach_calls: true
+    avoid_positional_boolean_parameters: true
+    avoid_print: true
+    avoid_types_on_closure_parameters: true
+    camel_case_extensions: true
+    camel_case_types: true
+    comment_references: true
+    constant_identifier_names: true
+    flutter_style_todos: true
+    literal_only_boolean_expressions: false
+    non_constant_identifier_names: true
+    one_member_abstracts: true
+    overridden_fields: true
+    prefer_constructors_over_static_methods: true
+    prefer_function_declarations_over_variables: true
+    prefer_interpolation_to_compose_strings: true
+    sort_constructors_first: true
+    type_annotate_public_apis: false
+    unnecessary_brace_in_string_interps: true
+    unnecessary_statements: true
+    unnecessary_this: true
+    use_setters_to_change_properties: true
+    no_leading_underscores_for_local_identifiers: false

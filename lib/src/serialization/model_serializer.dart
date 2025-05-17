@@ -9,9 +9,8 @@ mixin Serializable {
 
 /// Serializer for model classes
 class ModelSerializer<T extends Serializable> implements Serializer<T> {
-  final T Function(Map<String, dynamic> json) fromJson;
-
   ModelSerializer(this.fromJson);
+  final T Function(Map<String, dynamic> json) fromJson;
 
   @override
   Uint8List serialize(T value) {

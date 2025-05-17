@@ -4,11 +4,6 @@ import 'package:crypto/crypto.dart';
 
 /// A three-layer Bloom Filter implementation for fast key existence checks
 class BloomFilter {
-  final List<Uint8List> _layers;
-  final List<int> _layerSizes;
-  final List<int> _hashCounts;
-  static const int _numLayers = 3;
-
   BloomFilter({
     int bits8 = 1024, // 128 bytes
     int bits16 = 2048, // 256 bytes
@@ -18,6 +13,10 @@ class BloomFilter {
         _hashCounts = [4, 6, 8] {
     _initializeLayers();
   }
+  final List<Uint8List> _layers;
+  final List<int> _layerSizes;
+  final List<int> _hashCounts;
+  static const int _numLayers = 3;
 
   void _initializeLayers() {
     for (int i = 0; i < _numLayers; i++) {

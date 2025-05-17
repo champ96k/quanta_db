@@ -1,0 +1,3 @@
+class Index {
+  const Index();
+}

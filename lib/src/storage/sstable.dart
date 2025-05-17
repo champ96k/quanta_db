@@ -9,18 +9,17 @@ const int BLOCK_SIZE = 4096;
 
 /// Represents a Sorted String Table (SSTable) file
 class SSTable {
-  final String filePath;
-  final File file;
-  final int level;
-  final int id;
-  final BloomFilter _bloomFilter;
-
   SSTable({
     required this.filePath,
     required this.level,
     required this.id,
   })  : file = File(filePath),
         _bloomFilter = BloomFilter();
+  final String filePath;
+  final File file;
+  final int level;
+  final int id;
+  final BloomFilter _bloomFilter;
 
   /// Write a sorted map of key-value pairs to the SSTable file
   Future<void> write(Map<Uint8List, Uint8List> entries) async {

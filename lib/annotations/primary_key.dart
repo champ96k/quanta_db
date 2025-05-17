@@ -1,0 +1,3 @@
+class PrimaryKey {
+  const PrimaryKey();
+}

@@ -6,6 +6,13 @@ import 'src/serialization/serializer.dart';
 
 /// The main database class that provides a high-level interface to the LSM storage engine
 class QuantaDB {
+  /// Create a new QuantaDB instance
+  ///
+  /// [dataDir] is the directory where the database files will be stored
+  QuantaDB(String dataDir)
+      : _storage = LSMStorage(LSMConfig(
+          dataDir: dataDir,
+        ));
   final LSMStorage _storage;
   bool _isInitialized = false;
   final Map<Type, Serializer> _serializers = {
@@ -14,14 +21,6 @@ class QuantaDB {
     double: DoubleSerializer(),
     bool: BoolSerializer(),
   };
-
-  /// Create a new QuantaDB instance
-  ///
-  /// [dataDir] is the directory where the database files will be stored
-  QuantaDB(String dataDir)
-      : _storage = LSMStorage(LSMConfig(
-          dataDir: dataDir,
-        ));
 
   /// Initialize the database
   Future<void> init() async {
