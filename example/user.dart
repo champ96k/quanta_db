@@ -5,21 +5,20 @@ part 'user.g.dart';
 
 @QuantaEntity()
 class User implements Serializable {
-  User.fromJson(Map<String, dynamic> json)
-      : id = json['id'] as String,
-        name = json['name'] as String,
-        email = json['email'] as String,
-        password = json['password'] as String,
-        isActive = json['isActive'] as bool,
-        tempSessionToken = json['tempSessionToken'] as String? ?? '';
   User({
     required this.id,
     required this.name,
     required this.email,
-    required this.password,
     required this.isActive,
-    this.tempSessionToken = '',
+    required this.lastLogin,
   });
+
+  User.fromJson(Map<String, dynamic> json)
+      : id = json['id'] as String,
+        name = json['name'] as String,
+        email = json['email'] as String,
+        isActive = json['isActive'] as bool,
+        lastLogin = DateTime.parse(json['lastLogin'] as String);
 
   @QuantaId()
   final String id;
@@ -32,15 +31,14 @@ class User implements Serializable {
   final String email;
 
   @QuantaField()
-  @QuantaEncrypted()
-  final String password;
+  @QuantaIndex()
+  @QuantaReactive()
+  final bool isActive;
 
   @QuantaField()
+  @QuantaIndex()
   @QuantaReactive()
-  bool isActive;
-
-  @QuantaIgnore()
-  String tempSessionToken;
+  final DateTime lastLogin;
 
   @override
   Map<String, dynamic> toJson() {
@@ -48,14 +46,13 @@ class User implements Serializable {
       'id': id,
       'name': name,
       'email': email,
-      'password': password,
       'isActive': isActive,
-      'tempSessionToken': tempSessionToken,
+      'lastLogin': lastLogin.toIso8601String(),
     };
   }
 
   @override
   String toString() {
-    return 'User(id: $id, name: $name, email: $email, isActive: $isActive)';
+    return 'User(id: $id, name: $name, email: $email, isActive: $isActive, lastLogin: $lastLogin)';
   }
 }

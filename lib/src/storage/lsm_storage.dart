@@ -1,9 +1,10 @@
 import 'dart:io';
-import 'dart:isolate';
-import 'dart:typed_data';
-import 'package:path/path.dart' as path;
-import 'memtable.dart';
-import 'sstable.dart';
+import 'dart:async';
+import 'package:logging/logging.dart';
+import 'package:quanta_db/src/storage/memtable.dart';
+import 'package:quanta_db/src/storage/sstable.dart';
+import 'package:quanta_db/src/storage/compaction_manager.dart';
+import 'package:quanta_db/src/common/change_types.dart';
 
 /// Configuration for the LSM storage engine
 class LSMConfig {
@@ -21,141 +22,226 @@ class LSMConfig {
 
 /// The main LSM-Tree storage engine
 class LSMStorage {
-  LSMStorage(this.config)
-      : _memTable = MemTable(),
-        _levels = List.generate(config.maxLevels, (_) => []);
-  final LSMConfig config;
-  MemTable _memTable;
-  final List<List<SSTable>> _levels;
-  int _nextTableId = 0;
-  final _compactionPort = ReceivePort();
-  Isolate? _compactionIsolate;
+  LSMStorage(this.path)
+      : _memTable = MemTable(path: path),
+        _sstables = [],
+        _compactionManager = CompactionManager(path),
+        _logger = Logger('LSMStorage');
+  final String path;
+  final MemTable _memTable;
+  final List<SSTable> _sstables;
+  final CompactionManager _compactionManager;
+  final Logger _logger;
+  final _changeController = StreamController<ChangeEvent>.broadcast();
+
+  Stream<ChangeEvent> get onChange => _changeController.stream;
+
+  /// Execute a transaction
+  Future<void> transaction(
+      Future<void> Function(Transaction txn) callback) async {
+    final txn = Transaction(this);
+    try {
+      await callback(txn);
+      await txn.commit();
+    } catch (e) {
+      await txn.rollback();
+      rethrow;
+    }
+  }
 
   /// Initialize the storage engine
   Future<void> init() async {
     // Create data directory if it doesn't exist
-    final dir = Directory(config.dataDir);
+    final dir = Directory(path);
     if (!await dir.exists()) {
       await dir.create(recursive: true);
     }
 
-    // Start compaction worker
-    await _startCompactionWorker();
+    // Load existing SSTables
+    await _loadSSTables();
+  }
+
+  /// Load existing SSTables from disk
+  Future<void> _loadSSTables() async {
+    final dir = Directory(path);
+    if (!await dir.exists()) return;
+
+    final files = await dir.list().toList();
+    for (final file in files) {
+      if (file.path.endsWith('.sst')) {
+        try {
+          final sstable = await SSTable.load(file.path);
+          _sstables.add(sstable);
+        } catch (e) {
+          _logger.warning('Error loading SSTable ${file.path}: $e');
+          // Optionally delete corrupted files
+          await file.delete();
+        }
+      }
+    }
   }
 
   /// Put a key-value pair into the storage
-  Future<void> put(Uint8List key, Uint8List value) async {
+  Future<void> put<T>(String key, T value) async {
     _memTable.put(key, value);
+    _changeController.add(ChangeEvent(
+      key: key,
+      value: value,
+      type: T,
+      changeType: ChangeType.insert,
+    ));
 
     // Check if memtable needs to be flushed
-    if (_memTable.size >= config.maxMemTableSize) {
+    if (_memTable.size >= LSMConfig(dataDir: path).maxMemTableSize) {
       await _flushMemTable();
     }
   }
 
-  /// Get a value by key
-  Future<Uint8List?> get(Uint8List key) async {
-    // Check memtable first
-    final memValue = _memTable.get(key);
-    if (memValue != null) {
-      return memValue;
+  /// Flush the memtable to disk as a new SSTable
+  Future<void> _flushMemTable() async {
+    final entries = _memTable.entries;
+    if (entries.isEmpty) return;
+
+    // Create new SSTable
+    final memTable = MemTable(path: path);
+    for (final entry in entries.entries) {
+      memTable.put(entry.key, entry.value);
+    }
+    final sstable = await SSTable.create(
+      memTable,
+      0,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+
+    _sstables.add(sstable);
+    _memTable.clear();
+
+    // Schedule compaction if needed
+    await _scheduleCompaction();
+  }
+
+  /// Schedule compaction of SSTables if needed
+  Future<void> _scheduleCompaction() async {
+    final config = LSMConfig(dataDir: path);
+    final levelSizes = <int, int>{};
+    final levelTables = <int, List<SSTable>>{};
+
+    // Group tables by level and calculate sizes
+    for (final table in _sstables) {
+      final size = await File(table.path).length();
+      levelSizes[table.level] = (levelSizes[table.level] ?? 0) + size;
+      levelTables[table.level] = [...(levelTables[table.level] ?? []), table];
     }
 
-    // Check each level's SSTables
-    for (final level in _levels) {
-      for (final table in level) {
-        final value = await table.get(key);
-        if (value != null) {
-          return value;
+    // Check each level for compaction
+    for (var level = 0; level < config.maxLevels; level++) {
+      final size = levelSizes[level] ?? 0;
+      if (size > config.maxLevelSize) {
+        final tables = levelTables[level] ?? [];
+        if (tables.length > 1) {
+          _compactionManager.scheduleCompaction(tables, level + 1);
         }
       }
+    }
+  }
+
+  /// Get a value by key
+  Future<T?> get<T>(String key) async {
+    final value = await _memTable.get(key);
+    if (value != null) return value as T;
+
+    for (final sstable in _sstables) {
+      final value = await sstable.get(key);
+      if (value != null) return value as T;
     }
 
     return null;
   }
 
   /// Delete a key
-  Future<void> delete(Uint8List key) async {
+  Future<void> delete(String key) async {
     _memTable.delete(key);
+    _changeController.add(ChangeEvent(
+      key: key,
+      value: null,
+      type: dynamic,
+      changeType: ChangeType.delete,
+    ));
   }
 
-  /// Flush the current memtable to disk
-  Future<void> _flushMemTable() async {
-    if (_memTable.size == 0) return;
+  /// Get all items of a specific type
+  Future<List<T>> getAll<T>() async {
+    final results = <T>[];
 
-    // Create new SSTable
-    final tableId = _nextTableId++;
-    final tablePath = path.join(config.dataDir, 'table_$tableId.sst');
-    final table = SSTable(
-      filePath: tablePath,
-      level: 0,
-      id: tableId,
-    );
-
-    // Write memtable contents to SSTable
-    await table.write(_memTable.entries);
-    _levels[0].add(table);
-
-    // Create new memtable
-    _memTable = MemTable();
-
-    // Trigger compaction if needed
-    _triggerCompaction();
-  }
-
-  /// Trigger compaction if needed
-  void _triggerCompaction() {
-    for (int level = 0; level < config.maxLevels - 1; level++) {
-      if (_shouldCompactLevel(level)) {
-        _compactionPort.sendPort.send(level);
-        break;
+    // Get items from memtable
+    for (final entry in _memTable.entries.entries) {
+      if (entry.value is T) {
+        results.add(entry.value as T);
       }
     }
-  }
 
-  /// Check if a level needs compaction
-  bool _shouldCompactLevel(int level) {
-    if (level == 0) {
-      return _levels[level].length >= 4;
-    }
-
-    int totalSize = 0;
-    for (final table in _levels[level]) {
-      totalSize += table.file.lengthSync();
-    }
-    return totalSize >= config.maxLevelSize;
-  }
-
-  /// Start the compaction worker isolate
-  Future<void> _startCompactionWorker() async {
-    _compactionIsolate = await Isolate.spawn(
-      _compactionWorker,
-      _compactionPort.sendPort,
-    );
-  }
-
-  /// Compaction worker function
-  static void _compactionWorker(SendPort sendPort) {
-    final receivePort = ReceivePort();
-    sendPort.send(receivePort.sendPort);
-
-    receivePort.listen((message) async {
-      if (message is int) {
-        // TODO: Implement compaction logic
-        // This will be implemented in the next phase
+    // Get items from SSTables
+    for (final sstable in _sstables) {
+      final entries = await sstable.getAll();
+      for (final key in entries.keys) {
+        final value = entries[key];
+        if (value is T) {
+          results.add(value);
+        }
       }
-    });
+    }
+
+    return results;
   }
 
   /// Close the storage engine
   Future<void> close() async {
-    // Flush memtable if it has data
-    if (_memTable.size > 0) {
-      await _flushMemTable();
-    }
+    await _flushMemTable();
+    await _compactionManager.dispose();
+    _changeController.close();
+  }
+}
 
-    // Stop compaction worker
-    _compactionIsolate?.kill();
-    _compactionPort.close();
+/// A transaction for atomic operations
+class Transaction {
+  Transaction(this._storage) : _memTable = MemTable();
+  final LSMStorage _storage;
+  final MemTable _memTable;
+  final _changes = <ChangeEvent>[];
+
+  /// Put a key-value pair in the transaction
+  Future<void> put<T>(String key, T value) async {
+    _memTable.put(key, value);
+    _changes.add(ChangeEvent(
+      key: key,
+      value: value,
+      type: T,
+      changeType: ChangeType.insert,
+    ));
+  }
+
+  /// Delete a key in the transaction
+  Future<void> delete(String key) async {
+    _memTable.delete(key);
+    _changes.add(ChangeEvent(
+      key: key,
+      value: null,
+      type: dynamic,
+      changeType: ChangeType.delete,
+    ));
+  }
+
+  /// Commit the transaction
+  Future<void> commit() async {
+    // Apply changes to the main storage
+    for (final entry in _memTable.entries.entries) {
+      await _storage.put(entry.key, entry.value);
+    }
+  }
+
+  /// Rollback the transaction
+  Future<void> rollback() async {
+    _memTable.clear();
+    _changes.clear();
   }
 }

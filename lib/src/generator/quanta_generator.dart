@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
-import 'package:source_gen/source_gen.dart';
 import 'package:quanta_db/annotations/quanta_annotations.dart';
+import 'package:source_gen/source_gen.dart';
 
 class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
   @override
@@ -16,29 +16,95 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
     final className = element.name;
     final fields = element.fields.where((f) => !f.isStatic).toList();
 
+    // Get schema version from annotation
+    final schemaVersion = annotation.read('version').intValue;
+
     // Type Adapter with encryption and ignore support
     final adapterBuffer = StringBuffer();
     adapterBuffer.writeln('class ${className}Adapter {');
 
+    // Schema version
+    adapterBuffer.writeln('  static const int schemaVersion = $schemaVersion;');
+
+    // Validation method
+    adapterBuffer.writeln('''
+  static String? validate($className instance) {
+    final errors = <String, String>{};
+''');
+
+    for (final field in fields) {
+      if (_hasAnnotation(field, 'QuantaIgnore')) continue;
+
+      final fieldName = field.name;
+      final fieldType = field.type.getDisplayString(withNullability: true);
+      final annotations =
+          field.metadata.map((m) => m.computeConstantValue()).toList();
+
+      if (fieldType == 'String') {
+        adapterBuffer.writeln('''
+    final ${fieldName}Error = FieldValidator.validateString(instance.$fieldName, $annotations);
+    if (${fieldName}Error != null) {
+      errors['$fieldName'] = ${fieldName}Error;
+    }
+''');
+      } else if (fieldType == 'int' ||
+          fieldType == 'double' ||
+          fieldType == 'num') {
+        adapterBuffer.writeln('''
+    final ${fieldName}Error = FieldValidator.validateNumber(instance.$fieldName, $annotations);
+    if (${fieldName}Error != null) {
+      errors['$fieldName'] = ${fieldName}Error;
+    }
+''');
+      } else if (fieldType == 'bool') {
+        adapterBuffer.writeln('''
+    final ${fieldName}Error = FieldValidator.validateBoolean(instance.$fieldName, $annotations);
+    if (${fieldName}Error != null) {
+      errors['$fieldName'] = ${fieldName}Error;
+    }
+''');
+      } else {
+        adapterBuffer.writeln('''
+    final ${fieldName}Error = FieldValidator.validate(instance.$fieldName, $annotations);
+    if (${fieldName}Error != null) {
+      errors['$fieldName'] = ${fieldName}Error;
+    }
+''');
+      }
+    }
+
+    adapterBuffer.writeln('''
+    return errors.isEmpty ? null : errors.toString();
+  }
+''');
+
     // toJson method
     adapterBuffer.writeln(
-        '  static Map<String, dynamic> toJson($className instance) => {');
+        '  static Future<Map<String, dynamic>> toJson($className instance) async {');
+    adapterBuffer.writeln('''
+    final validationError = validate(instance);
+    if (validationError != null) {
+      throw ValidationException(validationError);
+    }
+''');
+    adapterBuffer.writeln('    return {');
     for (final field in fields) {
       if (_hasAnnotation(field, 'QuantaIgnore')) continue;
 
       final fieldName = field.name;
       if (_hasAnnotation(field, 'QuantaEncrypted')) {
-        adapterBuffer
-            .writeln('    \'$fieldName\': _encrypt(instance.$fieldName),');
+        adapterBuffer.writeln(
+            '      \'$fieldName\': AESEncryption.encrypt(instance.$fieldName.toString(), await KeyManager.getEncryptionKey()),');
       } else {
-        adapterBuffer.writeln('    \'$fieldName\': instance.$fieldName,');
+        adapterBuffer.writeln('      \'$fieldName\': instance.$fieldName,');
       }
     }
-    adapterBuffer.writeln('  };');
+    adapterBuffer.writeln('    };');
+    adapterBuffer.writeln('  }');
 
     // fromJson method
     adapterBuffer.writeln(
-        '  static $className fromJson(Map<String, dynamic> json) => $className(');
+        '  static Future<$className> fromJson(Map<String, dynamic> json) async => $className(');
     for (final field in fields) {
       if (_hasAnnotation(field, 'QuantaIgnore')) continue;
 
@@ -47,7 +113,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
 
       if (_hasAnnotation(field, 'QuantaEncrypted')) {
         adapterBuffer.writeln(
-            '    $fieldName: _decrypt(json[\'$fieldName\'] as String),');
+            '    $fieldName: ${fieldType == 'String' ? '' : '$fieldType.parse('}AESEncryption.decrypt(json[\'$fieldName\'] as String, await KeyManager.getEncryptionKey())${fieldType == 'String' ? '' : ')'},');
       } else {
         adapterBuffer
             .writeln('    $fieldName: json[\'$fieldName\'] as $fieldType,');
@@ -55,18 +121,6 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
     }
     adapterBuffer.writeln('  );');
 
-    // Encryption helpers
-    adapterBuffer.writeln('''
-  static String _encrypt(String value) {
-    // TODO: Implement encryption
-    return value;
-  }
-
-  static String _decrypt(String value) {
-    // TODO: Implement decryption
-    return value;
-  }
-''');
     adapterBuffer.writeln('}');
 
     // DAO with indexing and reactivity support
@@ -75,30 +129,39 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
     daoBuffer.writeln('  final _db; // TODO: Inject your database instance');
     daoBuffer.writeln('  ${className}Dao(this._db);');
 
+    // Schema version getter
+    daoBuffer.writeln('''
+  int get schemaVersion => ${className}Adapter.schemaVersion;
+''');
+
     // CRUD methods
     daoBuffer.writeln('''
   Future<void> insert($className instance) async {
-    final json = ${className}Adapter.toJson(instance);
-    // TODO: Implement insert with index updates
+    final json = await ${className}Adapter.toJson(instance);
+    await _db.put('\${instance.id}', json);
   }
 
   Future<$className?> getById(String id) async {
-    // TODO: Implement getById
-    return null;
+    final json = await _db.get<Map<String, dynamic>>(id);
+    if (json == null) return null;
+    return await ${className}Adapter.fromJson(json);
   }
 
   Future<List<$className>> getAll() async {
-    // TODO: Implement getAll
-    return [];
+    final items = await _db.getAll<Map<String, dynamic>>();
+    return items
+        .where((item) => item.keys.first.startsWith('${className.toLowerCase()}:'))
+        .map((item) => await ${className}Adapter.fromJson(item.values.first))
+        .toList();
   }
 
   Future<void> update($className instance) async {
-    final json = ${className}Adapter.toJson(instance);
-    // TODO: Implement update with index updates
+    final json = await ${className}Adapter.toJson(instance);
+    await _db.put('\${instance.id}', json);
   }
 
   Future<void> delete(String id) async {
-    // TODO: Implement delete with index cleanup
+    await _db.delete(id);
   }
 ''');
 
@@ -112,8 +175,8 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
         final fieldType = field.type.getDisplayString(withNullability: true);
         daoBuffer.writeln('''
   Future<List<$className>> findBy${_capitalize(fieldName)}($fieldType value) async {
-    // TODO: Implement index lookup
-    return [];
+    final items = await getAll();
+    return items.where((item) => item.$fieldName == value).toList();
   }
 ''');
       }
@@ -129,8 +192,14 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
         final fieldType = field.type.getDisplayString(withNullability: true);
         daoBuffer.writeln('''
   Stream<$fieldType> watch${_capitalize(fieldName)}($className instance) async* {
-    // TODO: Implement reactive field watching
-    yield instance.$fieldName;
+    final stream = _db.onChange.where((event) => 
+      event.key == '\${instance.id}');
+    await for (final event in stream) {
+      if (event.value != null) {
+        final updated = await ${className}Adapter.fromJson(event.value as Map<String, dynamic>);
+        yield updated.$fieldName;
+      }
+    }
   }
 ''');
       }
@@ -140,6 +209,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
 
     return [
       '// GENERATED CODE - DO NOT MODIFY BY HAND',
+      'import \'package:quanta_db/src/encryption/aes_encryption.dart\';',
       adapterBuffer.toString(),
       daoBuffer.toString(),
     ].join('\n\n');

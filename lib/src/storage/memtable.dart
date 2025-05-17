@@ -1,51 +1,51 @@
 import 'dart:collection';
-import 'dart:typed_data';
+import 'dart:convert';
+import 'package:quanta_db/src/serialization/dart_bson.dart';
 
 /// A memory table that stores key-value pairs in a sorted order using SplayTreeMap
 class MemTable {
-  MemTable() : _table = SplayTreeMap(_compareBytes);
-  final SplayTreeMap<Uint8List, Uint8List> _table;
+  /// Creates a new MemTable instance
+  MemTable({String? path}) : path = path ?? '';
+
+  /// The path where this MemTable is stored
+  final String path;
+
+  /// The underlying sorted map storing the key-value pairs
+  final _table = SplayTreeMap<String, dynamic>();
+
+  /// The current size of the memtable in bytes
   int _size = 0;
 
   /// Add a key-value pair to the memtable
-  void put(Uint8List key, Uint8List value) {
-    _size += key.length + value.length;
+  void put<T>(String key, T value) {
     _table[key] = value;
+    // Calculate size based on UTF-8 encoded key and Bson encoded value
+    _size += utf8.encode(key).length + DartBson.encode(value).length;
   }
 
   /// Get a value by key
-  Uint8List? get(Uint8List key) {
-    return _table[key];
+  T? get<T>(String key) {
+    return _table[key] as T?;
   }
 
   /// Delete a key
-  void delete(Uint8List key) {
-    if (_table.containsKey(key)) {
-      _size -= key.length + _table[key]!.length;
-      _table.remove(key);
+  void delete(String key) {
+    final value = _table[key];
+    if (value != null) {
+      _size -= utf8.encode(key).length + DartBson.encode(value).length;
     }
+    _table.remove(key);
   }
 
   /// Get the current size of the memtable in bytes
   int get size => _size;
 
   /// Get all entries in the memtable
-  Map<Uint8List, Uint8List> get entries => Map.unmodifiable(_table);
+  Map<String, dynamic> get entries => Map.unmodifiable(_table);
 
   /// Clear the memtable
   void clear() {
     _table.clear();
     _size = 0;
-  }
-
-  /// Compare two byte arrays for sorting
-  static int _compareBytes(Uint8List a, Uint8List b) {
-    final minLength = a.length < b.length ? a.length : b.length;
-    for (var i = 0; i < minLength; i++) {
-      if (a[i] != b[i]) {
-        return a[i].compareTo(b[i]);
-      }
-    }
-    return a.length.compareTo(b.length);
   }
 }

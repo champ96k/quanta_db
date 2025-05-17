@@ -1,34 +1,50 @@
-/// Marks a class as a database entity (table/collection)
+/// Annotation to mark a class as a QuantaDB entity
 class QuantaEntity {
-  const QuantaEntity();
+  const QuantaEntity({this.version = 1});
+
+  /// The schema version of this entity
+  final int version;
 }
 
-/// Customizes field behavior (e.g., index, encrypted, ignore)
-class QuantaField {
-  const QuantaField();
-}
-
-/// Marks the primary key field
+/// Annotation to mark a field as the primary key
 class QuantaId {
   const QuantaId();
 }
 
-/// Creates a secondary index
+/// Annotation to mark a field as indexed
 class QuantaIndex {
   const QuantaIndex();
 }
 
-/// Enables encryption for sensitive fields
+/// Annotation to mark a field as encrypted
 class QuantaEncrypted {
   const QuantaEncrypted();
 }
 
-/// Excludes a field from persistence
+/// Annotation to mark a field as reactive
+class QuantaReactive {
+  const QuantaReactive();
+}
+
+/// Annotation to mark a field as ignored in serialization
 class QuantaIgnore {
   const QuantaIgnore();
 }
 
-/// Makes the entity/field observable for reactive updates
-class QuantaReactive {
-  const QuantaReactive();
+/// Annotation to specify field options
+class QuantaField {
+  const QuantaField({
+    this.required = false,
+    this.defaultValue,
+    this.validator,
+  });
+
+  /// Whether this field is required
+  final bool required;
+
+  /// Default value for this field
+  final dynamic defaultValue;
+
+  /// Custom validation function
+  final Function? validator;
 }

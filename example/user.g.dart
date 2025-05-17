@@ -13,17 +13,15 @@ class UserAdapter {
         'id': instance.id,
         'name': instance.name,
         'email': instance.email,
-        'password': instance.password,
         'isActive': instance.isActive,
-        'tempSessionToken': instance.tempSessionToken,
+        'lastLogin': instance.lastLogin,
       };
   static User fromJson(Map<String, dynamic> json) => User(
         id: json['id'] as String,
         name: json['name'] as String,
         email: json['email'] as String,
-        password: json['password'] as String,
         isActive: json['isActive'] as bool,
-        tempSessionToken: json['tempSessionToken'] as String,
+        lastLogin: json['lastLogin'] as DateTime,
       );
   static String _encrypt(String value) {
     // TODO: Implement encryption

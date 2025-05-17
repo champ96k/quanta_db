@@ -1,55 +1,157 @@
 // ignore_for_file: avoid_print
 
 import 'package:quanta_db/quanta_db.dart';
-import 'package:quanta_db/src/serialization/model_serializer.dart';
+import 'package:quanta_db/src/query/query_engine.dart';
 
 import 'user.dart';
 
 void main() async {
-  // Create a new database instance
-  final db = QuantaDB('data');
+  // Initialize the database
+  final db = await QuantaDB.open('example', baseDir: 'quanta_db');
+  await db.init();
 
   try {
-    // Initialize the database
-    await db.init();
+    // Create a query engine
+    final queryEngine = QueryEngine(db.storage);
 
-    // Register the User model serializer
-    db.registerSerializer(ModelSerializer<User>(User.fromJson));
+    // Example 1: Basic query with filtering and sorting
+    print('\nExample 1: Basic Query');
+    final activeUsersStream = queryEngine.watch<User, User>(Query<User>()
+        .where((user) => user.isActive)
+        .sortBy((user) => user.lastLogin)
+        .take(5));
 
-    // Store different types of data
-    await db.put<String>('name', 'John Doe');
-    await db.put<int>('age', 30);
-    await db.put<String>('city', 'New York');
-    await db.put<bool>('isActive', true);
-    await db.put<double>('score', 95.5);
-
-    // Store a model
-    final user = User(
-      id: '1',
-      name: 'Jane Doe',
-      email: 'jane@example.com',
-      password: 'secret',
-      isActive: true,
+    // Listen for updates on active users
+    final subscription = activeUsersStream.listen(
+      (user) => print('Active user updated: $user'),
+      onError: (error) => print('Error in active users stream: $error'),
     );
-    await db.put<User>('user', user);
 
-    // Retrieve and print all data
-    print('String: [32m${await db.get<String>('name')}[0m');
-    print('Int: [32m${await db.get<int>('age')}[0m');
-    print('String: [32m${await db.get<String>('city')}[0m');
-    print('Bool: [32m${await db.get<bool>('isActive')}[0m');
-    print('Double: [32m${await db.get<double>('score')}[0m');
-    print('User: [32m${await db.get<User>('user')}[0m');
+    // Example 2: Aggregation - Count active users
+    print('\nExample 2: Aggregation - Count');
+    final activeUserCountStream = queryEngine.watch<User, int>(Query<User>()
+        .where((user) => user.isActive)
+        .aggregate((users) => users.length));
 
-    // Update data
-    await db.put<int>('age', 31);
-    print('Updated Age: [33m${await db.get<int>('age')}[0m');
+    activeUserCountStream.listen(
+      (count) => print('Active user count: $count'),
+      onError: (error) => print('Error in count stream: $error'),
+    );
 
-    // Delete data
-    await db.delete('city');
-    print('Deleted City: [31m${await db.get<String>('city')}[0m');
-  } finally {
-    // Always close the database when done
+    // Example 3: Aggregation - Average last login time
+    print('\nExample 3: Aggregation - Average');
+    final avgLastLoginStream = queryEngine.watch<User, double?>(
+        Query<User>().where((user) => user.isActive).aggregate((users) {
+      if (users.isEmpty) return null;
+      final total = users.fold<Duration>(
+        Duration.zero,
+        (sum, user) => sum + DateTime.now().difference(user.lastLogin),
+      );
+      return total.inMinutes / users.length;
+    }));
+
+    avgLastLoginStream.listen(
+      (avg) => print('Average minutes since last login: ${avg ?? "N/A"}'),
+      onError: (error) => print('Error in average stream: $error'),
+    );
+
+    // Example 4: Complex query with multiple aggregations
+    print('\nExample 4: Complex Query with Multiple Aggregations');
+    final userStatsStream = queryEngine.watch<User, Map<String, dynamic>>(
+        Query<User>().where((user) => user.isActive).aggregate((users) {
+      final stats = <String, dynamic>{
+        'total': users.length,
+        'byEmailDomain': <String, int>{},
+        'recentLogins': users
+            .where((u) => DateTime.now().difference(u.lastLogin).inHours < 24)
+            .length,
+      };
+
+      // Group by email domain
+      for (final user in users) {
+        final domain = user.email.split('@').last;
+        stats['byEmailDomain'][domain] =
+            (stats['byEmailDomain'][domain] ?? 0) + 1;
+      }
+
+      return stats;
+    }));
+
+    userStatsStream.listen(
+      (stats) => print('User statistics: $stats'),
+      onError: (error) => print('Error in stats stream: $error'),
+    );
+
+    // Store some test data
+    print('\nStoring test data...');
+    await _storeTestData(db);
+
+    // Wait to see the reactive updates
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Clean up
+    subscription.cancel();
     await db.close();
+  } catch (e, stackTrace) {
+    print('Error in main: $e');
+    print('Stack trace: $stackTrace');
+  }
+}
+
+Future<void> _storeTestData(QuantaDB db) async {
+  try {
+    // Store a user model
+    final user1 = User(
+      id: '1',
+      name: 'John Doe',
+      email: 'john@example.com',
+      isActive: true,
+      lastLogin: DateTime.now(),
+    );
+    await db.put('user:1', user1);
+
+    // Add another active user
+    final user2 = User(
+      id: '2',
+      name: 'Jane Smith',
+      email: 'jane@company.com',
+      isActive: true,
+      lastLogin: DateTime.now().subtract(const Duration(hours: 1)),
+    );
+    await db.put('user:2', user2);
+
+    // Add an inactive user
+    final user3 = User(
+      id: '3',
+      name: 'Bob Wilson',
+      email: 'bob@example.com',
+      isActive: false,
+      lastLogin: DateTime.now().subtract(const Duration(days: 1)),
+    );
+    await db.put('user:3', user3);
+
+    // Add more users with different email domains
+    final user4 = User(
+      id: '4',
+      name: 'Alice Brown',
+      email: 'alice@company.com',
+      isActive: true,
+      lastLogin: DateTime.now().subtract(const Duration(hours: 2)),
+    );
+    await db.put('user:4', user4);
+
+    final user5 = User(
+      id: '5',
+      name: 'Charlie Davis',
+      email: 'charlie@other.com',
+      isActive: true,
+      lastLogin: DateTime.now().subtract(const Duration(hours: 3)),
+    );
+    await db.put('user:5', user5);
+
+    print('Test data stored successfully');
+  } catch (e) {
+    print('Error storing test data: $e');
+    rethrow;
   }
 }

@@ -30,7 +30,7 @@ Benchmark against JSON/HiveBinary showing 2.8x faster serialization[3][5]
 
 ### 2.1 Annotation System Design
 ```dart
-@Realm(typeId: 0x01)
+@QuantaEntity()
 class User {
   @PrimaryKey()
   final int id;

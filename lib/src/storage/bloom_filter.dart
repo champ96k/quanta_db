@@ -1,96 +1,80 @@
 import 'dart:typed_data';
+import 'package:quanta_db/src/utils/xxhash.dart';
 
-import 'package:crypto/crypto.dart';
-
-/// A three-layer Bloom Filter implementation for fast key existence checks
+/// A 3-layer Bloom Filter implementation with different bit sizes
+/// for optimized memory usage and false positive rates
 class BloomFilter {
-  BloomFilter({
-    int bits8 = 1024, // 128 bytes
-    int bits16 = 2048, // 256 bytes
-    int bits32 = 4096, // 512 bytes
-  })  : _layers = List.generate(_numLayers, (_) => Uint8List(0)),
-        _layerSizes = [bits8, bits16, bits32],
-        _hashCounts = [4, 6, 8] {
+  BloomFilter(this.expectedElements) {
     _initializeLayers();
   }
-  final List<Uint8List> _layers;
-  final List<int> _layerSizes;
-  final List<int> _hashCounts;
-  static const int _numLayers = 3;
+
+  BloomFilter.fromBytes(Uint8List bytes, this.expectedElements) {
+    _initializeLayers();
+    var offset = 0;
+
+    for (var i = 0; i < _layers.length; i++) {
+      final layerSize = _layers[i].length;
+      _layers[i].setAll(0, bytes.sublist(offset, offset + layerSize));
+      offset += layerSize;
+    }
+  }
+
+  final int expectedElements;
+  late final List<Uint8List> _layers;
+  static const _bitsPerByte = 8;
 
   void _initializeLayers() {
-    for (int i = 0; i < _numLayers; i++) {
-      final sizeInBytes = (_layerSizes[i] / 8).ceil();
-      _layers[i] = Uint8List(sizeInBytes);
-    }
+    // Layer 1: 8-bit (1 byte) - Fastest, highest false positive rate
+    final layer1Size = (expectedElements * 8) ~/ _bitsPerByte;
+    // Layer 2: 16-bit (2 bytes) - Medium speed, medium false positive rate
+    final layer2Size = (expectedElements * 16) ~/ _bitsPerByte;
+    // Layer 3: 32-bit (4 bytes) - Slowest, lowest false positive rate
+    final layer3Size = (expectedElements * 32) ~/ _bitsPerByte;
+
+    _layers = [
+      Uint8List(layer1Size),
+      Uint8List(layer2Size),
+      Uint8List(layer3Size),
+    ];
   }
 
-  /// Add a key to the bloom filter
-  void add(Uint8List key) {
-    for (int layer = 0; layer < _numLayers; layer++) {
-      final hashes = _generateHashes(key, _hashCounts[layer]);
-      for (final hash in hashes) {
-        final index = hash % _layerSizes[layer];
-        final byteIndex = index ~/ 8;
-        final bitIndex = index % 8;
-        _layers[layer][byteIndex] |= (1 << bitIndex);
-      }
-    }
+  void add(String key) {
+    final hash = XXHash.hash64(key.codeUnits);
+    _setBit(_layers[0], hash, 8); // 8-bit layer
+    _setBit(_layers[1], hash, 16); // 16-bit layer
+    _setBit(_layers[2], hash, 32); // 32-bit layer
   }
 
-  /// Check if a key might exist in the filter
-  bool mightContain(Uint8List key) {
-    for (int layer = 0; layer < _numLayers; layer++) {
-      final hashes = _generateHashes(key, _hashCounts[layer]);
-      for (final hash in hashes) {
-        final index = hash % _layerSizes[layer];
-        final byteIndex = index ~/ 8;
-        final bitIndex = index % 8;
-        if ((_layers[layer][byteIndex] & (1 << bitIndex)) == 0) {
-          return false;
-        }
-      }
-    }
-    return true;
+  bool mightContain(String key) {
+    final hash = XXHash.hash64(key.codeUnits);
+    return _checkBit(_layers[0], hash, 8) && // Check 8-bit layer
+        _checkBit(_layers[1], hash, 16) && // Check 16-bit layer
+        _checkBit(_layers[2], hash, 32); // Check 32-bit layer
   }
 
-  /// Clear all layers of the bloom filter
-  void clear() {
+  void _setBit(Uint8List layer, int hash, int bits) {
+    final index = (hash % (layer.length * _bitsPerByte)) ~/ _bitsPerByte;
+    final bitOffset = hash % _bitsPerByte;
+    layer[index] |= (1 << bitOffset);
+  }
+
+  bool _checkBit(Uint8List layer, int hash, int bits) {
+    final index = (hash % (layer.length * _bitsPerByte)) ~/ _bitsPerByte;
+    final bitOffset = hash % _bitsPerByte;
+    return (layer[index] & (1 << bitOffset)) != 0;
+  }
+
+  /// Serialize the Bloom Filter to bytes
+  Uint8List toBytes() {
+    final totalSize = _layers.fold<int>(0, (sum, layer) => sum + layer.length);
+    final result = Uint8List(totalSize);
+    var offset = 0;
+
     for (final layer in _layers) {
-      layer.fillRange(0, layer.length, 0);
-    }
-  }
-
-  /// Get the current size of the bloom filter in bytes
-  int get size {
-    return _layers.fold(0, (sum, layer) => sum + layer.length);
-  }
-
-  /// Get all layers of the bloom filter
-  List<Uint8List> get layers => _layers;
-
-  /// Generate multiple hash values for a key
-  List<int> _generateHashes(Uint8List key, int count) {
-    final hashes = <int>[];
-    final hash = sha256.convert(key).bytes;
-
-    for (int i = 0; i < count; i++) {
-      int value = 0;
-      for (int j = 0; j < 4; j++) {
-        value = (value << 8) | hash[(i * 4 + j) % hash.length];
-      }
-      hashes.add(value.abs());
+      result.setAll(offset, layer);
+      offset += layer.length;
     }
 
-    return hashes;
-  }
-
-  /// Merge another bloom filter into this one
-  void merge(BloomFilter other) {
-    for (int i = 0; i < _numLayers; i++) {
-      for (int j = 0; j < _layers[i].length; j++) {
-        _layers[i][j] |= other._layers[i][j];
-      }
-    }
+    return result;
   }
 }
