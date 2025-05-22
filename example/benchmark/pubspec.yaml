@@ -1,5 +1,6 @@
 name: benchmark
 description: A benchmark for database operations.
+publish_to: none
 version: 1.0.0
 # repository: https://github.com/my_org/my_repo
 
@@ -8,8 +9,10 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
+
   quanta_db:
     path: ../../
+    
   hive: ^2.2.3
   sqflite_common_ffi: ^2.3.2+1
   path: ^1.8.3
