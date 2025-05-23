@@ -36,8 +36,8 @@ class SSTable {
 
   /// Create a new SSTable from a MemTable
   static Future<SSTable> create(MemTable memTable, int level, int id) async {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final fileName = 'sstable_${level}_$timestamp.sst';
+    // Format: sstable_L{level}_{id:06d}.sst
+    final fileName = 'sstable_L${level}_${id.toString().padLeft(6, '0')}.sst';
     final filePath = '${memTable.path}/$fileName';
     final file = await File(filePath).open(mode: FileMode.write);
 

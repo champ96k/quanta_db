@@ -2,11 +2,13 @@
 
 import 'package:quanta_db/quanta_db.dart';
 
-import 'user.dart';
+import 'model/user.dart';
 
 void main() async {
   // Initialize the database
-  final db = await QuantaDB.open('complete_example', baseDir: 'quanta_db');
+
+  final db = await QuantaDB.open('complete_example');
+
   await db.init();
 
   try {

@@ -3,7 +3,7 @@
 import 'dart:async';
 import 'package:quanta_db/quanta_db.dart';
 
-import 'user.dart';
+import 'model/user.dart';
 
 void main() async {
   // Initialize the database
