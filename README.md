@@ -9,6 +9,7 @@ QuantaDB is a modern, high-performance **NoSQL** local database built entirely i
 Existing local databases for Dart/Flutter often have external dependencies or performance limitations. QuantaDB aims to overcome these challenges by implementing a Log-Structured Merge Tree (LSM-Tree) storage engine from scratch in pure Dart, coupled with an annotation-driven code generation system for a developer-friendly experience.
 
 Our goals include:
+
 - Achieving competitive read and write performance.
 - Providing a simple and intuitive API.
 - Ensuring data durability and consistency.
@@ -41,6 +42,23 @@ Here's a diagram illustrating the typical data flow within QuantaDB:
 - Write operations go through the MemTable and are eventually flushed to SSTables.
 - Read operations utilize Bloom Filters and the MemTable before hitting SSTables.
 - Compaction runs in the background to merge and optimize SSTables.
+
+## 🔥 Performance Benchmarks 🔥
+
+QuantaDB is designed for speed. Below are benchmark results comparing QuantaDB's performance for 10,000 write and read operations against other popular Dart/Flutter local databases (Hive and SQLite). These benchmarks were run on a specific environment and may vary, but they demonstrate QuantaDB's significant performance advantage, especially for write operations.
+
+| Database | Operation | Total Operations | Total Time |
+| -------- | --------- | ---------------- | ---------- |
+| QuantaDB | Write     | 10000            | 30ms       |
+| QuantaDB | Read      | 10000            | 9ms        |
+| Hive     | Write     | 10000            | 216ms      |
+| Hive     | Read      | 10000            | 8ms        |
+| SQLite   | Write     | 10000            | 3290ms     |
+| SQLite   | Read      | 10000            | 299ms      |
+
+**As you can see, QuantaDB demonstrates significantly faster write performance compared to Hive and SQLite, while read performance is highly competitive.**
+
+**[Check out the benchmark code here](../quanta_db/example/benchmark)** to run it yourself and see the details.
 
 ## Getting Started
 
@@ -107,9 +125,9 @@ void main() async {
 
 **Tips:**
 
-*   QuantaDB is a **NoSQL** database, using a key-value store model based on LSM-Trees.
-*   Data is stored using a custom binary serialization format (DartBson).
-*   Directory management is handled automatically for different platforms, ensuring secure storage locations.
+- QuantaDB is a **NoSQL** database, using a key-value store model based on LSM-Trees.
+- Data is stored using a custom binary serialization format (DartBson).
+- Directory management is handled automatically for different platforms, ensuring secure storage locations.
 
 ## Contributing
 
@@ -121,4 +139,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-*Note: This project is currently under active development. Features and APIs may change.*
+_Note: This project is currently under active development. Features and APIs may change._
