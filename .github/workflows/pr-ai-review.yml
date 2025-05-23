@@ -1,3 +1,9 @@
+name: PR AI Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
 jobs:
   review:
     runs-on: ubuntu-latest
@@ -6,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Champ AI Code Review
-        uses: <your-username>/<your-repo>@main
+        uses: champ96k/ai-code-review-action@v1.2.4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           google_api_key: ${{ secrets.GOOGLE_API_KEY }}
