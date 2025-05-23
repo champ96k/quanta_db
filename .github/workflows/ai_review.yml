@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run AI Code Review
-        uses: champ96k/ai-code-review-action@v1.2.1
+        uses: champ96k/ai-code-review-action@v1.2.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           google_api_key: ${{ secrets.GOOGLE_API_KEY }}
