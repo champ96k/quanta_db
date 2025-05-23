@@ -21,15 +21,14 @@ jobs:
           python-version: "3.10"
 
       - name: Install Dependencies
-        run: pip install google-generativeai requests
+        run: pip install --upgrade google-generativeai requests # ✅ Force latest SDK
 
-      - name: Fetch PR Changes
-        run: |
-          echo "Fetching PR changes for #${{ github.event.pull_request.number }}..."
-          echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+      - name: Set PR Number
+        run: echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
 
       - name: Run AI Code Review
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: python .github/workflows/review_code.py
