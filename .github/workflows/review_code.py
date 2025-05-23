@@ -10,10 +10,9 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 REPO = os.getenv("GITHUB_REPOSITORY")
 PR_NUMBER = os.getenv("PR_NUMBER")
 
-# Configure Gemini AI
+# Configure Gemini AI (v1)
 genai.configure(api_key=GOOGLE_API_KEY)
-
-model = genai.GenerativeModel(model_name="models/gemini-pro")  # ✅ Full model path
+model = genai.GenerativeModel(model_name="models/gemini-pro")  # ✅ Full model path and v1 compatible
 
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
