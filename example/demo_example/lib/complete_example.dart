@@ -2,8 +2,7 @@
 
 import 'dart:async';
 import 'package:quanta_db/quanta_db.dart';
-import 'package:quanta_db/src/query/query_engine.dart';
-import 'package:quanta_db/src/storage/lsm_storage.dart';
+
 import 'user.dart';
 
 void main() async {

@@ -1,7 +1,6 @@
 // ignore_for_file: avoid_print
 
 import 'package:quanta_db/quanta_db.dart';
-import 'package:quanta_db/src/query/query_engine.dart';
 
 import 'user.dart';
 

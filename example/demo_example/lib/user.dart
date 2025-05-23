@@ -1,5 +1,4 @@
-import 'package:quanta_db/annotations/quanta_annotations.dart';
-import 'package:quanta_db/src/serialization/model_serializer.dart';
+import 'package:quanta_db/quanta_db.dart';
 
 part 'user.g.dart';
 

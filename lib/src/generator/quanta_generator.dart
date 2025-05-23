@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
-import 'package:quanta_db/annotations/quanta_annotations.dart';
+import 'package:quanta_db/quanta_db.dart';
 import 'package:source_gen/source_gen.dart';
 
 class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
@@ -21,6 +21,13 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
 
     // Type Adapter with encryption and ignore support
     final adapterBuffer = StringBuffer();
+    adapterBuffer.writeln('');
+    adapterBuffer.writeln(
+        '// **************************************************************************');
+    adapterBuffer.writeln('// QuantaGenerator');
+    adapterBuffer.writeln(
+        '// **************************************************************************');
+    adapterBuffer.writeln('');
     adapterBuffer.writeln('class ${className}Adapter {');
 
     // Schema version
@@ -37,8 +44,11 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
 
       final fieldName = field.name;
       final fieldType = field.type.getDisplayString(withNullability: true);
-      final annotations =
-          field.metadata.map((m) => m.computeConstantValue()).toList();
+      final annotations = _formatAnnotations(field.metadata);
+
+      if (annotations.isEmpty) {
+        continue;
+      }
 
       if (fieldType == 'String') {
         adapterBuffer.writeln('''
@@ -58,7 +68,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
 ''');
       } else if (fieldType == 'bool') {
         adapterBuffer.writeln('''
-    final ${fieldName}Error = FieldValidator.validateBoolean(instance.$fieldName, $annotations);
+    final ${fieldName}Error = FieldValidator.validateBoolean(value: instance.$fieldName, annotations: $annotations);
     if (${fieldName}Error != null) {
       errors['$fieldName'] = ${fieldName}Error;
     }
@@ -92,12 +102,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
       if (_hasAnnotation(field, 'QuantaIgnore')) continue;
 
       final fieldName = field.name;
-      if (_hasAnnotation(field, 'QuantaEncrypted')) {
-        adapterBuffer.writeln(
-            '      \'$fieldName\': AESEncryption.encrypt(instance.$fieldName.toString(), await KeyManager.getEncryptionKey()),');
-      } else {
-        adapterBuffer.writeln('      \'$fieldName\': instance.$fieldName,');
-      }
+      adapterBuffer.writeln('      \'$fieldName\': instance.$fieldName,');
     }
     adapterBuffer.writeln('    };');
     adapterBuffer.writeln('  }');
@@ -110,14 +115,8 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
 
       final fieldName = field.name;
       final fieldType = field.type.getDisplayString(withNullability: true);
-
-      if (_hasAnnotation(field, 'QuantaEncrypted')) {
-        adapterBuffer.writeln(
-            '    $fieldName: ${fieldType == 'String' ? '' : '$fieldType.parse('}AESEncryption.decrypt(json[\'$fieldName\'] as String, await KeyManager.getEncryptionKey())${fieldType == 'String' ? '' : ')'},');
-      } else {
-        adapterBuffer
-            .writeln('    $fieldName: json[\'$fieldName\'] as $fieldType,');
-      }
+      adapterBuffer
+          .writeln('    $fieldName: json[\'$fieldName\'] as $fieldType,');
     }
     adapterBuffer.writeln('  );');
 
@@ -126,7 +125,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
     // DAO with indexing and reactivity support
     final daoBuffer = StringBuffer();
     daoBuffer.writeln('class ${className}Dao {');
-    daoBuffer.writeln('  final _db; // TODO: Inject your database instance');
+    daoBuffer.writeln('  final QuantaDB _db;');
     daoBuffer.writeln('  ${className}Dao(this._db);');
 
     // Schema version getter
@@ -138,7 +137,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
     daoBuffer.writeln('''
   Future<void> insert($className instance) async {
     final json = await ${className}Adapter.toJson(instance);
-    await _db.put('\${instance.id}', json);
+    await _db.put(instance.id, json);
   }
 
   Future<$className?> getById(String id) async {
@@ -148,16 +147,14 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
   }
 
   Future<List<$className>> getAll() async {
-    final items = await _db.getAll<Map<String, dynamic>>();
-    return items
-        .where((item) => item.keys.first.startsWith('${className.toLowerCase()}:'))
-        .map((item) => await ${className}Adapter.fromJson(item.values.first))
-        .toList();
+    final items = await _db.queryEngine.query<Map<String, dynamic>>(Query<Map<String, dynamic>>());
+    final filtered = items.where((item) => item.keys.first.startsWith('${className.toLowerCase()}:')).toList();
+    return Future.wait(filtered.map((item) => ${className}Adapter.fromJson(item.values.first)));
   }
 
   Future<void> update($className instance) async {
     final json = await ${className}Adapter.toJson(instance);
-    await _db.put('\${instance.id}', json);
+    await _db.put(instance.id, json);
   }
 
   Future<void> delete(String id) async {
@@ -208,11 +205,38 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
     daoBuffer.writeln('}');
 
     return [
-      '// GENERATED CODE - DO NOT MODIFY BY HAND',
-      'import \'package:quanta_db/src/encryption/aes_encryption.dart\';',
       adapterBuffer.toString(),
       daoBuffer.toString(),
     ].join('\n\n');
+  }
+
+  String _formatAnnotations(List<ElementAnnotation> annotations) {
+    final formattedAnnotations = annotations
+        .map((annotation) {
+          final reader = ConstantReader(annotation.computeConstantValue());
+          final name = annotation.element?.name ?? '';
+
+          if (name == 'QuantaField') {
+            final required = reader.read('required').boolValue;
+            final defaultValue = reader.read('defaultValue').isNull
+                ? 'null'
+                : reader.read('defaultValue').literalValue;
+            final validator = reader.read('validator').isNull ? 'null' : 'null';
+            return 'QuantaField(required: $required, defaultValue: $defaultValue, validator: $validator)';
+          } else if (name == 'QuantaIndex') {
+            return 'QuantaIndex()';
+          } else if (name == 'QuantaReactive') {
+            return 'QuantaReactive()';
+          }
+          return null;
+        })
+        .where((a) => a != null)
+        .toList();
+
+    if (formattedAnnotations.isEmpty) {
+      return '[]';
+    }
+    return '[${formattedAnnotations.join(', ')}]';
   }
 
   bool _hasAnnotation(Element element, String annotationName) {
