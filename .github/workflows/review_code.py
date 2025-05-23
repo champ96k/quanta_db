@@ -2,6 +2,7 @@ import os
 import json
 import requests
 import google.generativeai as genai
+from google.api_core import exceptions
 
 # Load environment variables
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -69,25 +70,31 @@ Now, review these changes:
 Respond in **Markdown format**.
 """
 
-response = model.generate_content(prompt)
+try:
+    response = model.generate_content(prompt)
+    if response and hasattr(response, "text"):
+        review_comments = response.text.strip()
+        if review_comments.lower() in ["lgtm", "lgtm!", "looks good"]:
+            review_comments = "✅ LGTM! No major issues found. Good to go! 🚀"
+    else:
+        review_comments = "⚠️ Unable to generate AI review at this time. Please proceed with manual review."
+except exceptions.ResourceExhausted:
+    review_comments = """⚠️ **AI Review Quota Exceeded**
 
-if response and hasattr(response, "text"):
-    review_comments = response.text.strip()
-    if review_comments.lower() in ["lgtm", "lgtm!", "looks good"]:
-        review_comments = "✅ LGTM! No major issues found. Good to go! 🚀"
-else:
-    print("❌ AI response error")
-    exit(1)
+The AI review could not be performed because the API quota has been exceeded. This is a temporary limitation of the free tier.
 
-# Step 4: Check if the review requires changes
-needs_review = any(
-    keyword in review_comments.lower() 
-    for keyword in ["consider", "recommend", "could be improved", "potential issue", "possible bug", "optimize", "fix", "security risk"]
-)
+Please proceed with a manual review of the changes. The PR can still be merged if it passes manual review.
 
-# Step 5: Post a Comment Instead of Approval
+For more information about Gemini API quotas, visit: https://ai.google.dev/gemini-api/docs/rate-limits"""
+except Exception as e:
+    review_comments = f"""⚠️ **AI Review Failed**
+
+The AI review could not be performed due to an unexpected error: {str(e)}
+
+Please proceed with a manual review of the changes. The PR can still be merged if it passes manual review."""
+
+# Step 4: Post a Comment
 review_url = f"https://api.github.com/repos/{REPO}/issues/{PR_NUMBER}/comments"
-
 review_payload = {"body": review_comments}
 
 response = requests.post(review_url, headers=HEADERS, json=review_payload)
@@ -96,3 +103,4 @@ if response.status_code == 201:
     print("✅ Review posted successfully!")
 else:
     print(f"❌ Failed to submit review: {response.text}")
+    exit(1)
