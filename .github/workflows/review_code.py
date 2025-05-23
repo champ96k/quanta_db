@@ -12,7 +12,8 @@ PR_NUMBER = os.getenv("PR_NUMBER")
 
 # Configure Gemini AI
 genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel("gemini-pro")  # Using standard model with better availability
+
+model = genai.GenerativeModel(model_name="models/gemini-pro")  # ✅ Full model path
 
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
