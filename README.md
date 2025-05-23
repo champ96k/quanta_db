@@ -1,7 +1,7 @@
 # QuantaDB: A High-Performance Pure Dart Local Database
 
 <p align="center">
-  <img src="https://github.com/champ96k/quanta_db/blob/master/logo.png" alt="QuantaDB Logo" width="200"/>
+  <img src="https://raw.githubusercontent.com/champ96k/quanta_db/master/logo.png" alt="QuantaDB Logo" width="400"/>
 </p>
 
 **⚠️ Warning: This project is currently in beta development. Use accordingly for development and testing purposes.**
