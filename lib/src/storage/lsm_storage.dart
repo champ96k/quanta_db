@@ -1,10 +1,10 @@
-import 'dart:io';
 import 'dart:async';
-import 'package:logging/logging.dart';
+import 'dart:io';
+
+import 'package:quanta_db/src/common/change_types.dart';
+import 'package:quanta_db/src/storage/compaction_manager.dart';
 import 'package:quanta_db/src/storage/memtable.dart';
 import 'package:quanta_db/src/storage/sstable.dart';
-import 'package:quanta_db/src/storage/compaction_manager.dart';
-import 'package:quanta_db/src/common/change_types.dart';
 
 /// Configuration for the LSM storage engine
 class LSMConfig {
@@ -25,13 +25,11 @@ class LSMStorage {
   LSMStorage(this.path)
       : _memTable = MemTable(path: path),
         _sstables = [],
-        _compactionManager = CompactionManager(path),
-        _logger = Logger('LSMStorage');
+        _compactionManager = CompactionManager(path);
   final String path;
   final MemTable _memTable;
   final List<SSTable> _sstables;
   final CompactionManager _compactionManager;
-  final Logger _logger;
   final _changeController = StreamController<ChangeEvent>.broadcast();
 
   Stream<ChangeEvent> get onChange => _changeController.stream;
@@ -73,7 +71,8 @@ class LSMStorage {
           final sstable = await SSTable.load(file.path);
           _sstables.add(sstable);
         } catch (e) {
-          _logger.warning('Error loading SSTable ${file.path}: $e');
+          // ignore: avoid_print
+          print('Error loading SSTable ${file.path}: $e');
           // Optionally delete corrupted files
           await file.delete();
         }
