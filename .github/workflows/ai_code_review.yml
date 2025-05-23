@@ -1,0 +1,14 @@
+name: Champ AI Code Review
+on:
+  pull_request:
+    branches:
+      - master
+jobs:
+  ai_review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Champ AI Code Review
+        uses: champ96k/ai-code-review-action@v1 
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          google_api_key: ${{ secrets.GOOGLE_API_KEY }} 
