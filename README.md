@@ -131,7 +131,7 @@ void main() async {
 
 ## Contributing
 
-We welcome contributions! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+We welcome contributions! Please see the [CONTRIBUTING.md](https://github.com/champ96k/quanta_db/blob/master/CONTRIBUTING.md) for details.
 
 ## License
 
