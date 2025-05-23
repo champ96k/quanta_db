@@ -15,7 +15,8 @@ class FieldValidator {
 
         // Check custom validator
         if (annotation.validator != null) {
-          final result = annotation.validator!(value);
+          final result =
+              (annotation.validator as String? Function(dynamic))(value);
           if (result != null) {
             return result;
           }
@@ -41,7 +42,8 @@ class FieldValidator {
 
         // Check custom validator
         if (annotation.validator != null) {
-          final result = annotation.validator!(value);
+          final result =
+              (annotation.validator as String? Function(dynamic))(value);
           if (result != null) {
             return result;
           }
@@ -68,7 +70,8 @@ class FieldValidator {
 
         // Check custom validator
         if (annotation.validator != null) {
-          final result = annotation.validator!(value);
+          final result =
+              (annotation.validator as String? Function(dynamic))(value);
           if (result != null) {
             return result;
           }
@@ -95,7 +98,8 @@ class FieldValidator {
 
         // Check custom validator
         if (annotation.validator != null) {
-          final result = annotation.validator!(value);
+          final result =
+              (annotation.validator as String? Function(dynamic))(value);
           if (result != null) {
             return result;
           }
