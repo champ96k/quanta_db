@@ -4,8 +4,12 @@ import 'package:quanta_db/storage/storage_manager.dart';
 import 'package:quanta_db/serialization/serializer.dart';
 
 void main() {
+  //
+  // Storage manager instance for handling data persistence
   late StorageManager storage;
+  // Serializer instance for converting data to/from storage format
   late Serializer serializer;
+  // Index manager instance for handling database indexes
   late IndexManager indexManager;
 
   setUp(() {
