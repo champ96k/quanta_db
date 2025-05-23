@@ -24,7 +24,7 @@ QuantaDB is built with a layered architecture to separate concerns and improve m
 
 Below is a high-level overview of the QuantaDB architecture:
 
-![QuantaDB High-Level Architecture](design_diagram.png)
+![QuantaDB High-Level Architecture](https://raw.githubusercontent.com/champ96k/quanta_db/master/design_diagram.png)
 
 - **Application Layer**: Provides the public API and integrates with the annotation and code generation systems.
 - **Core Engine Layer**: Contains the central logic for query processing, LSM storage management, and transactions.
@@ -35,7 +35,7 @@ Below is a high-level overview of the QuantaDB architecture:
 
 Here's a diagram illustrating the typical data flow within QuantaDB:
 
-![QuantaDB Data Flow](design_flow.png)
+![QuantaDB Data Flow](https://raw.githubusercontent.com/champ96k/quanta_db/master/design_flow.png)
 
 - Data enters through the API.
 - Queries are processed by the Query Engine.
@@ -70,7 +70,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  quanta_db: ^0.0.1
+  quanta_db: ^0.0.2
 ```
 
 2. **Install it**
