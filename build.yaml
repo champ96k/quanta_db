@@ -10,6 +10,9 @@ targets:
           exclude:
             - lib/annotations/**.dart
             - lib/src/generator/**.dart
+      quanta_db:
+        options:
+          generate_migrations: true
 
 builders:
   quanta_generator:
@@ -20,3 +23,9 @@ builders:
     build_to: source
     required_inputs: [".dart"]
     runs_before: ["build_web_compilers|entrypoint"] 
+  quanta_db:
+    import: "package:quanta_db/src/builders/migration_builder.dart"
+    builder_factories: ["MigrationBuilder"]
+    build_extensions: {".dart": [".migration.dart"]}
+    auto_apply: root_package
+    build_to: source 

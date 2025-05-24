@@ -13,3 +13,10 @@ export 'package:quanta_db/src/serialization/model_serializer.dart';
 export 'package:quanta_db/src/validation/field_validator.dart';
 export 'package:quanta_db/src/validation/validation_exception.dart';
 export 'package:quanta_db/src/common/change_types.dart';
+export 'package:quanta_db/src/migration/migration_generator.dart';
+
+export 'src/migration/schema_migration.dart';
+
+export 'package:quanta_db/src/storage/compaction_manager.dart';
+export 'package:quanta_db/src/storage/mem_table.dart';
+export 'package:quanta_db/src/storage/sstable.dart';

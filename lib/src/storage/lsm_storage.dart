@@ -214,6 +214,11 @@ class LSMStorage {
     return results;
   }
 
+  /// Get all keys in storage
+  Future<List<String>> keys() async {
+    return _memTable.keys.toList();
+  }
+
   /// Close the storage engine
   Future<void> close() async {
     await _flushMemTable();

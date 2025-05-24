@@ -41,4 +41,9 @@ class StorageManager {
   Future<void> clear() async {
     _storage.clear();
   }
+
+  /// Get all keys in storage
+  Future<List<Uint8List>> keys() async {
+    return _storage.values.toList();
+  }
 }
