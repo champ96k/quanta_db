@@ -96,6 +96,27 @@ class LSMStorage {
     }
   }
 
+  /// Put multiple key-value pairs into the storage in a single batch
+  Future<void> putAll<T>(Map<String, T> entries) async {
+    // Add all entries to memtable
+    for (final entry in entries.entries) {
+      _memTable.put(entry.key, entry.value);
+    }
+
+    // Add batch change event
+    _changeController.add(ChangeEvent(
+      key: 'batch',
+      value: entries,
+      type: Map<String, T>,
+      changeType: ChangeType.batch,
+    ));
+
+    // Check if memtable needs to be flushed
+    if (_memTable.size >= LSMConfig(dataDir: path).maxMemTableSize) {
+      await _flushMemTable();
+    }
+  }
+
   /// Flush the memtable to disk as a new SSTable
   Future<void> _flushMemTable() async {
     final entries = _memTable.entries;

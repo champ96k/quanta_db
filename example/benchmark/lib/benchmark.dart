@@ -8,6 +8,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sqflite_ffi;
 abstract class Database {
   Future<void> init();
   Future<void> put(String key, dynamic value);
+  Future<void> putAll(Map<String, dynamic> entries);
   Future<dynamic> get(String key);
   Future<void> delete(String key);
   Future<void> close();
@@ -23,6 +24,10 @@ class QuantaDBWrapper implements Database {
   @override
   Future<void> put(String key, dynamic value) async =>
       await _db.put(key, value);
+
+  @override
+  Future<void> putAll(Map<String, dynamic> entries) async =>
+      await _db.storage.putAll(entries);
 
   @override
   Future<dynamic> get(String key) async => await _db.get(key);
@@ -50,6 +55,13 @@ class HiveDBWrapper implements Database {
   @override
   Future<void> put(String key, dynamic value) async {
     await _box.put(key, value);
+  }
+
+  @override
+  Future<void> putAll(Map<String, dynamic> entries) async {
+    for (var entry in entries.entries) {
+      await _box.put(entry.key, entry.value);
+    }
   }
 
   @override
@@ -106,6 +118,17 @@ class SQLiteDBWrapper implements Database {
   }
 
   @override
+  Future<void> putAll(Map<String, dynamic> entries) async {
+    for (var entry in entries.entries) {
+      await _db.insert(
+        'kv_store',
+        {'key': entry.key, 'value': entry.value.toString()},
+        conflictAlgorithm: sqflite_ffi.ConflictAlgorithm.replace,
+      );
+    }
+  }
+
+  @override
   Future<dynamic> get(String key) async {
     final List<Map<String, dynamic>> maps = await _db.query(
       'kv_store',
@@ -153,4 +176,28 @@ class BenchmarkResult {
         '  Total Time: ${totalTime.inMilliseconds}ms\n'
         '  Average Time: ${averageTime.inMicroseconds}µs\n';
   }
+}
+
+Future<BenchmarkResult> runBatchWriteBenchmark(
+    Database db, String dbName, int operations) async {
+  final stopwatch = Stopwatch()..start();
+
+  // Create a batch of entries
+  final entries = <String, dynamic>{};
+  for (int i = 0; i < operations; i++) {
+    entries['key_$i'] = 'value_$i';
+  }
+
+  // Perform batch write
+  await db.putAll(entries);
+
+  stopwatch.stop();
+  return BenchmarkResult(
+    operation: 'Batch Write',
+    database: dbName,
+    operations: operations,
+    totalTime: stopwatch.elapsed,
+    averageTime:
+        Duration(milliseconds: stopwatch.elapsedMilliseconds ~/ operations),
+  );
 }
