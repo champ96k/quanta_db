@@ -38,10 +38,6 @@ void main() async {
     print('\n=== Example 6: Batch Operations ===');
     await _demonstrateBatchOperations(db);
 
-    // Example 7: Schema Migrations
-    print('\n=== Example 7: Schema Migrations ===');
-    await _demonstrateSchemaMigrations(db);
-
     // Clean up
     await db.close();
   } catch (e, stackTrace) {
@@ -279,58 +275,4 @@ Future<void> _demonstrateBatchOperations(QuantaDB db) async {
     final retrievedUser = await db.get<User>(entry.key);
     print('Retrieved user from batch: ${retrievedUser?.name}');
   }
-}
-
-Future<void> _demonstrateSchemaMigrations(QuantaDB db) async {
-  // Initial schema
-  final oldSchema = {
-    'fields': {
-      'id': {'type': 'String', 'nullable': false},
-      'name': {'type': 'String', 'nullable': false},
-      'email': {'type': 'String', 'nullable': true},
-    },
-    'indexes': [
-      {
-        'name': 'email_idx',
-        'fields': ['email'],
-        'unique': true
-      }
-    ],
-  };
-
-  // New schema with changes
-  final newSchema = {
-    'fields': {
-      'id': {'type': 'String', 'nullable': false},
-      'name': {'type': 'String', 'nullable': false},
-      'email': {'type': 'String', 'nullable': true},
-      'age': {'type': 'int', 'nullable': true}, // New field
-      'isActive': {'type': 'bool', 'nullable': false}, // New field
-    },
-    'indexes': [
-      {
-        'name': 'email_idx',
-        'fields': ['email'],
-        'unique': true
-      },
-      {
-        'name': 'active_idx',
-        'fields': ['isActive'],
-        'unique': false
-      }
-    ],
-  };
-
-  // Generate migration
-  final generator = MigrationGenerator();
-  await generator.generateMigration(
-    'User',
-    1,
-    2,
-    oldSchema,
-    newSchema,
-  );
-
-  print('Migration script generated successfully');
-  print('Check lib/migrations directory for the generated file');
 }

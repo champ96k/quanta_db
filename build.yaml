@@ -22,7 +22,7 @@ builders:
     auto_apply: root_package
     build_to: source
     required_inputs: [".dart"]
-    runs_before: ["build_web_compilers|entrypoint"]
+    runs_before: ["build_web_compilers|entrypoint"] 
   quanta_db:
     import: "package:quanta_db/src/builders/migration_builder.dart"
     builder_factories: ["MigrationBuilder"]
