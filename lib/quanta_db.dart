@@ -12,3 +12,4 @@ export 'package:quanta_db/src/serialization/model_serializer.dart';
 
 export 'package:quanta_db/src/validation/field_validator.dart';
 export 'package:quanta_db/src/validation/validation_exception.dart';
+export 'package:quanta_db/src/common/change_types.dart';

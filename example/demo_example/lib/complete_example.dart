@@ -34,6 +34,10 @@ void main() async {
     print('\n=== Example 5: Reactive Queries ===');
     await _demonstrateReactiveQueries(queryEngine);
 
+    // Example 6: Batch Operations
+    print('\n=== Example 6: Batch Operations ===');
+    await _demonstrateBatchOperations(db);
+
     // Clean up
     await db.close();
   } catch (e, stackTrace) {
@@ -233,4 +237,42 @@ Future<void> _storeTestData(LSMStorage storage) async {
     await storage.put('user:${user.id}', user);
   }
   print('Test data stored successfully');
+}
+
+Future<void> _demonstrateBatchOperations(QuantaDB db) async {
+  // Create a batch of users
+  final users = {
+    'user:batch:1': User(
+      id: 'batch:1',
+      name: 'Batch User 1',
+      email: 'batch1@example.com',
+      isActive: true,
+      lastLogin: DateTime.now(),
+    ),
+    'user:batch:2': User(
+      id: 'batch:2',
+      name: 'Batch User 2',
+      email: 'batch2@example.com',
+      isActive: true,
+      lastLogin: DateTime.now().subtract(const Duration(minutes: 5)),
+    ),
+    'user:batch:3': User(
+      id: 'batch:3',
+      name: 'Batch User 3',
+      email: 'batch3@example.com',
+      isActive: false,
+      lastLogin: DateTime.now().subtract(const Duration(minutes: 10)),
+    ),
+  };
+
+  // Store all users in a single batch operation
+  print('Storing ${users.length} users in batch...');
+  await db.storage.putAll(users);
+  print('Batch operation completed successfully');
+
+  // Verify the batch operation
+  for (final entry in users.entries) {
+    final retrievedUser = await db.get<User>(entry.key);
+    print('Retrieved user from batch: ${retrievedUser?.name}');
+  }
 }

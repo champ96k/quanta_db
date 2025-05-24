@@ -177,8 +177,6 @@ We welcome contributions! Please see the [CONTRIBUTING.md](https://github.com/ch
   <img src="https://contrib.rocks/image?repo=champ96k/quanta_db" />
 </a>
 
-Made with [contrib.rocks](https://contrib.rocks).
-
 ## Creator
 
 - **Tushar Nikam** - [LinkedIn](https://www.linkedin.com/in/tushar-nikam-dev/)
