@@ -9,15 +9,45 @@ on:
       - "documentation/**"
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check.outputs.has_changes }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Check for documentation changes
+        id: check
+        run: |
+          # Get the base and head commits
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          
+          # Check if there are any changes in the documentation folder
+          if git diff --name-only $BASE_SHA $HEAD_SHA | grep -q "^documentation/"; then
+            echo "Changes detected in documentation folder"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes detected in documentation folder"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
   deploy:
-    # Only run if the pull request was merged and targets the master branch
-    if: github.event.pull_request.merged == true && github.base_ref == 'master'
+    needs: check-changes
+    # Only run if:
+    # 1. The pull request was merged
+    # 2. Targets the master branch
+    # 3. Has actual changes in documentation
+    if: |
+      github.event.pull_request.merged == true && 
+      github.base_ref == 'master' && 
+      needs.check-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        # Use fetch-depth: 0 to get the full history for diffing if needed in the future,
-        # though 'paths' trigger handles basic filtering
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -36,9 +66,7 @@ jobs:
       - name: Deploy to Netlify
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }} # Recommended to add SITE_ID as a secret
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
-          cd documentation # Ensure we are in the documentation directory
-          # Deploy using netlify.toml configuration from the root, but command run from documentation dir
-          # netlify.toml should have: base = "documentation", publish = "build", command = "npm run build"
+          cd documentation
           netlify deploy --prod
