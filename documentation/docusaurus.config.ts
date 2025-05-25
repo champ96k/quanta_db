@@ -80,6 +80,11 @@ const config: Config = {
         },
         { to: '/blog', label: 'Blog', position: 'left' },
         {
+          href: 'https://pub.dev/packages/quanta_db',
+          label: 'Pub Package',
+          position: 'right',
+        },
+        {
           href: 'https://github.com/champ96k/quanta_db',
           label: 'GitHub',
           position: 'right',
@@ -91,6 +96,10 @@ const config: Config = {
       links: [
         {
           items: [
+            {
+              label: 'Pub Package',
+              href: 'https://pub.dev/packages/quanta_db',
+            },
             {
               label: 'GitHub',
               href: 'https://github.com/champ96k/quanta_db',
