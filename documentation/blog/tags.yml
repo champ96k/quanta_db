@@ -1,0 +1,29 @@
+announcement:
+  label: Announcement
+  description: Important announcements about QuantaDB
+  permalink: /blog/tags/announcement
+
+beta:
+  label: Beta
+  description: Beta releases and features
+  permalink: /blog/tags/beta
+
+database:
+  label: Database
+  description: Database-related articles
+  permalink: /blog/tags/database
+
+dart:
+  label: Dart
+  description: Dart programming language articles
+  permalink: /blog/tags/dart
+
+flutter:
+  label: Flutter
+  description: Flutter framework articles
+  permalink: /blog/tags/flutter
+
+roadmap:
+  label: Roadmap
+  description: Development plans and progress updates
+  permalink: /blog/tags/roadmap 

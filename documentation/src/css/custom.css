@@ -1,0 +1,157 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #2e8555;
+  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary-darker: #277148;
+  --ifm-color-primary-darkest: #205d3b;
+  --ifm-color-primary-light: #33925d;
+  --ifm-color-primary-lighter: #359962;
+  --ifm-color-primary-lightest: #4fddbf;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/**
+ * Any CSS you add here will be applied to all relevant pages
+ * like the homepage, docs, blog posts, etc.
+ */
+
+/* Make CodeSurfer a little nicer */
+.codeSurferContainer {
+  --cs-theme-background: #1a1a1a !important;
+  --cs-colors-text: #ffffff !important;
+  --cs-colors-tokenComment: #555 !important;
+  --cs-colors-tokenPunctuation: #bbb !important;
+  --cs-colors-tokenProperty: #d18f9c !important;
+  --cs-colors-tokenSelector: #cc99cd !important;
+  --cs-colors-tokenOperator: #d18f9c !important;
+  --cs-colors-tokenString: #8dc891 !important;
+  --cs-colors-tokenKeyword: #d18f9c !important;
+  --cs-colors-tokenFunction: #7fd1ef !important;
+  --cs-colors-tokenVariable: #f0c674 !important;
+  --cs-colors-tokenDeleted: #f92672 !important;
+  --cs-colors-tokenInserted: #a6e22e !important;
+  --cs-colors-tokenBuiltin: #a6e22e !important;
+  --cs-colors-tokenClass: #7fd1ef !important;
+  --cs-colors-tokenTag: #f92672 !important;
+  --cs-colors-tokenAttribute: #f0c674 !important;
+  --cs-colors-tokenNumber: #ae81ff !important;
+  --cs-colors-tokenSymbol: #ae81ff !important;
+  --cs-colors-tokenBoolean: #ae81ff !important;
+  --cs-colors-tokenConstant: #ae81ff !important;
+  --cs-colors-tokenSpecial: #66d9ef !important;
+  --cs-colors-tokenRegex: #fd971f !important;
+  --cs-colors-tokenImportant: #f92672 !important;
+}
+
+/* Global styles for a clean and professional look */
+body {
+  font-family: 'Roboto', sans-serif;
+  /* Example: Use Roboto font */
+}
+
+a {
+  color: var(--ifm-color-primary);
+  /* Use theme primary color for links */
+  text-decoration: none;
+  /* Remove underline from links by default */
+}
+
+a:hover {
+  text-decoration: underline;
+  /* Add underline on hover for better usability */
+}
+
+/* Adjust heading margins for consistent spacing */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  /* Add space above headings */
+}
+
+/* Improve paragraph spacing */
+p {
+  margin-bottom: 1rem;
+}
+
+/* Footer styling */
+.footer {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(78, 31, 140, 0.6) 100%), #1a1a1a;
+  /* Dark gradient background */
+  color: #ffffff;
+  /* White text color */
+  padding: 2rem 0;
+  /* Add vertical padding */
+  text-align: center;
+  /* Center text content */
+}
+
+/* Target the ul directly */
+.footer__links>ul {
+  margin-bottom: 0;
+  /* Remove default bottom margin */
+  padding: 0;
+  /* Remove default padding */
+  list-style: none;
+  /* Remove list bullets */
+  text-align: center;
+  /* Center the inline list items */
+  width: 100%;
+  /* Ensure the container takes full width */
+}
+
+/* Style for each footer list item */
+.footer__links li {
+  margin-bottom: 0;
+  /* Remove default bottom margin */
+  padding: 0 1rem;
+  /* Add horizontal padding for spacing */
+  display: inline-block;
+  /* Display list items inline */
+}
+
+.footer__link-item {
+  color: #ffffff;
+  /* White color for footer links */
+  text-decoration: none;
+  /* Remove underline */
+  font-size: 1rem;
+  /* Adjust font size */
+}
+
+.footer__link-item:hover {
+  text-decoration: underline;
+  /* Add underline on hover */
+}
+
+.footer__copyright {
+  color: rgba(255, 255, 255, 0.8);
+  /* Slightly transparent white for copyright */
+  margin-top: 1rem;
+  /* Space above copyright */
+  font-size: 0.9rem;
+  /* Smaller font size for copyright */
+}
