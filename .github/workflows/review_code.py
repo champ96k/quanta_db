@@ -1,8 +1,54 @@
 import os
 import json
 import requests
-import google.generativeai as genai
-from google.api_core import exceptions
+import sys
+import traceback
+
+def post_fallback_comment(error_message):
+    """Post a comment requesting manual review when there's an error."""
+    try:
+        GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+        REPO = os.getenv("GITHUB_REPOSITORY")
+        PR_NUMBER = os.getenv("PR_NUMBER")
+        
+        if not all([GITHUB_TOKEN, REPO, PR_NUMBER]):
+            print("❌ Missing required environment variables")
+            return False
+
+        headers = {
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        
+        review_url = f"https://api.github.com/repos/{REPO}/issues/{PR_NUMBER}/comments"
+        review_payload = {
+            "body": f"⚠️ **Automated Review Failed**\n\n"
+                   f"Error: {error_message}\n\n"
+                   f"Please perform a manual code review.\n\n"
+                   f"Error Details:\n```\n{traceback.format_exc()}\n```"
+        }
+        
+        response = requests.post(review_url, headers=headers, json=review_payload)
+        if response.status_code == 201:
+            print("✅ Posted fallback comment requesting manual review")
+            return True
+        else:
+            print(f"❌ Failed to post fallback comment: {response.text}")
+            return False
+    except Exception as e:
+        print(f"❌ Failed to post fallback comment: {str(e)}")
+        return False
+
+try:
+    import google.generativeai as genai
+    from google.api_core import exceptions
+except ImportError as e:
+    error_msg = f"Failed to import required packages: {str(e)}"
+    print(f"❌ {error_msg}")
+    if post_fallback_comment(error_msg):
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 # Load environment variables
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -11,9 +57,34 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 REPO = os.getenv("GITHUB_REPOSITORY")
 PR_NUMBER = os.getenv("PR_NUMBER")
 
-# Configure Gemini
-genai.configure(api_key=GOOGLE_API_KEY)
-gemini_model = genai.GenerativeModel(model_name="models/gemini-pro")
+# Verify required environment variables
+if not all([GITHUB_TOKEN, GOOGLE_API_KEY, OPENROUTER_API_KEY, REPO, PR_NUMBER]):
+    missing_vars = [var for var, val in {
+        "GITHUB_TOKEN": GITHUB_TOKEN,
+        "GOOGLE_API_KEY": GOOGLE_API_KEY,
+        "OPENROUTER_API_KEY": OPENROUTER_API_KEY,
+        "GITHUB_REPOSITORY": REPO,
+        "PR_NUMBER": PR_NUMBER
+    }.items() if not val]
+    
+    error_msg = f"Missing required environment variables: {', '.join(missing_vars)}"
+    print(f"❌ {error_msg}")
+    if post_fallback_comment(error_msg):
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+try:
+    # Configure Gemini
+    genai.configure(api_key=GOOGLE_API_KEY)
+    gemini_model = genai.GenerativeModel(model_name="models/gemini-pro")
+except Exception as e:
+    error_msg = f"Failed to configure Gemini: {str(e)}"
+    print(f"❌ {error_msg}")
+    if post_fallback_comment(error_msg):
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
@@ -21,17 +92,29 @@ HEADERS = {
 }
 
 # Step 1: Fetch PR Changes
-pr_files_url = f"https://api.github.com/repos/{REPO}/pulls/{PR_NUMBER}/files"
-response = requests.get(pr_files_url, headers=HEADERS)
+try:
+    pr_files_url = f"https://api.github.com/repos/{REPO}/pulls/{PR_NUMBER}/files"
+    response = requests.get(pr_files_url, headers=HEADERS)
 
-if response.status_code != 200:
-    print("❌ Failed to fetch PR files:", response.text)
-    exit(1)
+    if response.status_code != 200:
+        error_msg = f"Failed to fetch PR files: {response.text}"
+        print(f"❌ {error_msg}")
+        if post_fallback_comment(error_msg):
+            sys.exit(0)
+        else:
+            sys.exit(1)
 
-pr_files = response.json()
-if not pr_files:
-    print("No code changes found to review.")
-    exit(0)
+    pr_files = response.json()
+    if not pr_files:
+        print("No code changes found to review.")
+        sys.exit(0)
+except Exception as e:
+    error_msg = f"Error fetching PR files: {str(e)}"
+    print(f"❌ {error_msg}")
+    if post_fallback_comment(error_msg):
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 # Step 2: Prepare prompt
 code_reviews = []
@@ -77,7 +160,7 @@ def review_with_openrouter(prompt):
         data = response.json()
         return data["choices"][0]["message"]["content"].strip()
     except Exception as e:
-        return f"⚠️ OpenRouter Fallback Failed: {str(e)}"
+        raise Exception(f"OpenRouter Fallback Failed: {str(e)}")
 
 # Step 3: Try Gemini, else fallback
 try:
@@ -87,21 +170,49 @@ try:
     else:
         review_comments = review_with_openrouter(prompt)
 except exceptions.ResourceExhausted:
-    review_comments = review_with_openrouter(prompt)
+    try:
+        review_comments = review_with_openrouter(prompt)
+    except Exception as e:
+        error_msg = f"Both Gemini and OpenRouter failed: {str(e)}"
+        print(f"❌ {error_msg}")
+        if post_fallback_comment(error_msg):
+            sys.exit(0)
+        else:
+            sys.exit(1)
 except Exception as e:
-    review_comments = f"⚠️ Gemini Failed, fallback to OpenRouter:\n\n" + review_with_openrouter(prompt)
+    try:
+        review_comments = f"⚠️ Gemini Failed, fallback to OpenRouter:\n\n" + review_with_openrouter(prompt)
+    except Exception as e2:
+        error_msg = f"Both Gemini and OpenRouter failed: {str(e2)}"
+        print(f"❌ {error_msg}")
+        if post_fallback_comment(error_msg):
+            sys.exit(0)
+        else:
+            sys.exit(1)
 
 if review_comments.lower() in ["lgtm", "lgtm!", "looks good"]:
     review_comments = "✅ LGTM! No major issues found. Good to go! 🚀"
 
 # Step 4: Post a comment on the PR
-review_url = f"https://api.github.com/repos/{REPO}/issues/{PR_NUMBER}/comments"
-review_payload = {"body": review_comments}
+try:
+    review_url = f"https://api.github.com/repos/{REPO}/issues/{PR_NUMBER}/comments"
+    review_payload = {"body": review_comments}
 
-response = requests.post(review_url, headers=HEADERS, json=review_payload)
+    response = requests.post(review_url, headers=HEADERS, json=review_payload)
 
-if response.status_code == 201:
-    print("✅ Review posted successfully!")
-else:
-    print(f"❌ Failed to submit review: {response.text}")
-    exit(1)
+    if response.status_code == 201:
+        print("✅ Review posted successfully!")
+    else:
+        error_msg = f"Failed to submit review: {response.text}"
+        print(f"❌ {error_msg}")
+        if post_fallback_comment(error_msg):
+            sys.exit(0)
+        else:
+            sys.exit(1)
+except Exception as e:
+    error_msg = f"Error posting review: {str(e)}"
+    print(f"❌ {error_msg}")
+    if post_fallback_comment(error_msg):
+        sys.exit(0)
+    else:
+        sys.exit(1)
