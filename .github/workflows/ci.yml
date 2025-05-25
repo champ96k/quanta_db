@@ -10,46 +10,46 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.22.2'
-        channel: 'stable'
-    
-    - name: Install dependencies
-      run: flutter pub get
-    
-    - name: Verify formatting
-      run: dart format --output=none --set-exit-if-changed lib/
-    
-    - name: Analyze project source
-      run: dart analyze lib/
-    
-    - name: Run tests
-      run: flutter test
+      - uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.22.2"
+          channel: "stable"
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib/
+
+      - name: Analyze project source
+        run: dart analyze lib/
+
+      - name: Run tests
+        run: flutter test
 
   code-review:
     needs: code-quality
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pylint requests
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint requests google-generativeai
 
-    - name: Run code review
-      run: python .github/workflows/review_code.py
+      - name: Run code review
+        run: python .github/workflows/review_code.py
 
   # This job ensures all previous jobs passed
   verify-checks:
