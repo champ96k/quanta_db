@@ -1,8 +1,6 @@
 > ⚠️ **BETA RELEASE**  
 > This project is currently in **beta**. While it's functional and available for use, it may still undergo changes. Please use with caution in production environments and report any bugs or issues.
 
-<br>
-
 # QuantaDB: A High-Performance Pure Dart Local Database
 
 <p align="center">
