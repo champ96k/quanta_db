@@ -1,0 +1,58 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+.heroBanner {
+  padding: 8rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  /* Updated background to match the image */
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(78, 31, 140, 0.6) 100%), #1a1a1a;
+  /* Dark gradient */
+  color: #ffffff;
+  /* White text */
+  /* Optional: Add a subtle texture or overlay if needed */
+  /* background-image: url('/img/background-texture.png'); */
+  /* background-blend-mode: overlay; */
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 4rem;
+  }
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+  /* Add some space above the button */
+}
+
+.buttons a.button {
+  background-color: #7b42f4;
+  /* Purple button color, similar to image */
+  color: #ffffff;
+  /* White text color */
+  padding: 1rem 2rem;
+  /* Adjust padding */
+  font-size: 1.2rem;
+  /* Adjust font size */
+  border-radius: 8px;
+  /* Rounded corners */
+  transition: background-color 0.3s ease;
+  /* Smooth transition for hover */
+  text-decoration: none;
+  /* Remove underline from link */
+}
+
+.buttons a.button:hover {
+  background-color: #6a37d5;
+  /* Darker purple on hover */
+}
+
+/* Add styling for the navbar if necessary to match the image */
+/* This might require adding custom CSS to documentation/src/css/custom.css */
