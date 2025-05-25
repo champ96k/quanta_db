@@ -15,7 +15,7 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.19.3'
+        flutter-version: '3.19.6'
         channel: 'stable'
     
     - name: Install dependencies
@@ -50,3 +50,11 @@ jobs:
 
     - name: Run code review
       run: python .github/workflows/review_code.py
+
+  # This job ensures all previous jobs passed
+  verify-checks:
+    needs: [code-quality, code-review]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all checks passed
+        run: echo "All checks passed successfully"
