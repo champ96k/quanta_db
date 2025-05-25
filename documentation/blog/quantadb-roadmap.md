@@ -1,9 +1,9 @@
 ---
 slug: quantadb-roadmap
-title: 'QuantaDB Roadmap: Building the Future of Dart Databases'
+title: "QuantaDB Roadmap: Building the Future of Dart Databases"
 authors: [champ96k]
 tags: [roadmap, database, dart, flutter]
-date: 2024-03-21
+date: 2025-05-24
 ---
 
 <p align="center">
@@ -21,6 +21,7 @@ Today, I'm excited to share our detailed roadmap for QuantaDB, highlighting what
 We've successfully implemented the foundation of QuantaDB with a pure Dart LSM-Tree storage engine. Here's what's already working:
 
 - **High-Performance Storage**
+
   - MemTable using `SplayTreeMap` for O(log n) writes
   - SSTable serialization with 4KB block alignment
   - Three-layer Bloom filters for lightning-fast lookups
@@ -37,6 +38,7 @@ We've successfully implemented the foundation of QuantaDB with a pure Dart LSM-T
 We're currently working on making QuantaDB more developer-friendly through annotation-driven code generation:
 
 - **Completed Features**
+
   - `@QuantaEntity` annotation system
   - Primary key and index support
   - Field validation with constraints
@@ -56,6 +58,7 @@ We're currently working on making QuantaDB more developer-friendly through annot
 We're focusing on completing these critical features:
 
 - **Relationship Management**
+
   - Entity relationships
   - Referential integrity
   - Efficient relationship querying
@@ -70,6 +73,7 @@ We're focusing on completing these critical features:
 Our next major phase will bring real-time capabilities:
 
 - **Stream-Based Watching**
+
   - Real-time query updates
   - Efficient change detection
   - Query result caching
@@ -125,11 +129,13 @@ Our architecture is designed to scale with your needs:
 We welcome community participation in shaping QuantaDB's future:
 
 1. **Testing & Feedback**
+
    - Try out our beta features
    - Report issues on GitHub
    - Share your use cases
 
 2. **Contributions**
+
    - Code contributions
    - Documentation improvements
    - Feature suggestions
@@ -142,6 +148,7 @@ We welcome community participation in shaping QuantaDB's future:
 ## Stay Updated 📢
 
 To keep track of our progress:
+
 - Watch our [GitHub repository](https://github.com/champ96k/quanta_db)
 - Follow our [blog](/blog) for updates
 - Join our [Discussions](https://github.com/champ96k/quanta_db/discussions)
@@ -154,5 +161,5 @@ Stay tuned for more updates as we continue to build the future of Dart databases
 
 ---
 
-*Tushar Nikam*  
-Creator of QuantaDB & Software Engineer @ Gojek 
+_Tushar Nikam_  
+Creator of QuantaDB & Software Engineer @ Gojek

@@ -1,9 +1,9 @@
 ---
 slug: quantadb-beta-announcement
-title: 'Announcing QuantaDB Beta: A High-Performance Pure Dart Local Database'
+title: "Announcing QuantaDB Beta: A High-Performance Pure Dart Local Database"
 authors: [champ96k]
 tags: [announcement, beta, database, dart, flutter]
-date: 2024-03-21
+date: 2025-05-25
 ---
 
 <p align="center">
@@ -19,19 +19,24 @@ As a Flutter developer, I've often encountered limitations with existing local d
 ## Key Features
 
 ### 🚀 High Performance
+
 QuantaDB implements a Log-Structured Merge Tree (LSM-Tree) storage engine from scratch in pure Dart. Our benchmarks show impressive results:
+
 - 10,000 write operations in just 30ms
 - 10,000 read operations in 9ms
 - Batch operations (1000 items) completed in 15ms
 
 ### 🔒 Data Security
+
 Security is a top priority:
+
 - Built-in field-level encryption
 - Platform-specific secure storage
 - Access control lists
 - Runtime and compile-time validation
 
 ### 📊 Advanced Features
+
 - Real-time updates with reactive queries
 - Type safety with code generation
 - Cross-platform compatibility
@@ -64,17 +69,17 @@ import 'package:quanta_db/quanta_db.dart';
 
 void main() async {
   final db = await QuantaDB.open('my_database');
-  
+
   // Store data
   await db.put('user:1', {
     'name': 'John Doe',
     'email': 'john@example.com'
   });
-  
+
   // Retrieve data
   final user = await db.get('user:1');
   print('User: $user');
-  
+
   await db.close();
 }
 ```
@@ -84,7 +89,7 @@ void main() async {
 We've benchmarked QuantaDB against popular alternatives:
 
 | Operation | QuantaDB | Hive  | SQLite |
-|-----------|----------|-------|--------|
+| --------- | -------- | ----- | ------ |
 | Write     | 30ms     | 216ms | 3290ms |
 | Read      | 9ms      | 8ms   | 299ms  |
 | Batch     | 15ms     | 180ms | 2800ms |
@@ -101,6 +106,7 @@ While we're proud of what we've achieved, this is just the beginning. Our roadma
 ## Get Involved
 
 We welcome contributions from the community! Whether you're interested in:
+
 - Testing and providing feedback
 - Contributing code
 - Improving documentation
@@ -126,5 +132,5 @@ Try it out, share your feedback, and join us in shaping the future of QuantaDB!
 
 ---
 
-*Tushar Nikam*  
-Creator of QuantaDB & Software Engineer @ Gojek 
+_Tushar Nikam_  
+Creator of QuantaDB & Software Engineer @ Gojek
