@@ -26,10 +26,6 @@
 [context.branch-deploy]
   command = "npm run build"
 
-# Ignore changes outside documentation folder
-[build.processing.ignore]
-  - "!documentation/**"
-
 [[redirects]]
   from = "/*"
   to = "/index.html"

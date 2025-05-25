@@ -1,0 +1,44 @@
+name: Deploy Docs to Netlify
+
+on:
+  # Trigger on pull request closure (including merges)
+  pull_request_target:
+    types: [closed]
+    # Only trigger if changes are within the documentation folder
+    paths:
+      - "documentation/**"
+
+jobs:
+  deploy:
+    # Only run if the pull request was merged and targets the master branch
+    if: github.event.pull_request.merged == true && github.base_ref == 'master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        # Use fetch-depth: 0 to get the full history for diffing if needed in the future,
+        # though 'paths' trigger handles basic filtering
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies and Build documentation
+        run: |
+          cd documentation
+          npm install
+          npm run build
+
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }} # Recommended to add SITE_ID as a secret
+        run: |
+          cd documentation # Ensure we are in the documentation directory
+          # Deploy using netlify.toml configuration from the root, but command run from documentation dir
+          # netlify.toml should have: base = "documentation", publish = "build", command = "npm run build"
+          netlify deploy --prod
