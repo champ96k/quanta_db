@@ -7,7 +7,7 @@ void main() {
   late RelationshipManager relationshipManager;
 
   setUp(() {
-    storage = StorageManager();
+    storage = StorageManager('test_db');
     relationshipManager = RelationshipManager(storage);
   });
 

@@ -12,31 +12,23 @@ topics:
 
 environment:
   sdk: ">=3.4.3 <4.0.0"
-  flutter: ">=1.17.0"
 
 dependencies:
-  flutter:
-    sdk: flutter
-
-  # Cryptographic operations for data security
-  crypto: ^3.0.3      
-
-  # Optimized data structures and algorithms
-  collection: ^1.18.0 
-
-  # Annotation support for code generation
-  path: ^1.8.3        
-  meta: ^1.12.0       
-
-  # Platform-specific file system access
-  path_provider: ^2.1.2 
+  # Core dependencies
+  crypto: ^3.0.3
+  collection: ^1.18.0
+  path: ^1.8.3
+  meta: ^1.12.0
+  path_provider: ^2.1.2
 
   # Build system for code generation
-  build: ^2.4.1       
-  source_gen: ^1.5.0 
+  build: ^2.4.1
+  source_gen: ^1.5.0
+  analyzer: ^6.4.1
 
-  # Dart code analysis and parsing
-  analyzer: ^6.4.1    
+  # Flutter dependencies
+  flutter:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -47,5 +39,11 @@ dev_dependencies:
   test: ^1.24.0
   lints: ^3.0.0
 
-# The following section is specific to Flutter packages.
-flutter:
+# Enable platform support
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:

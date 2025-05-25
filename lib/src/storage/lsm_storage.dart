@@ -5,6 +5,7 @@ import 'package:quanta_db/src/common/change_types.dart';
 import 'package:quanta_db/src/storage/compaction_manager.dart';
 import 'package:quanta_db/src/storage/memtable.dart';
 import 'package:quanta_db/src/storage/sstable.dart';
+import 'package:quanta_db/src/storage/storage_interface.dart';
 
 /// Configuration for the LSM storage engine
 class LSMConfig {
@@ -21,7 +22,7 @@ class LSMConfig {
 }
 
 /// The main LSM-Tree storage engine
-class LSMStorage {
+class LSMStorage implements StorageInterface {
   LSMStorage(this.path)
       : _memTable = MemTable(path: path),
         _sstables = [],
@@ -32,6 +33,7 @@ class LSMStorage {
   final CompactionManager _compactionManager;
   final _changeController = StreamController<ChangeEvent>.broadcast();
 
+  @override
   Stream<ChangeEvent> get onChange => _changeController.stream;
 
   /// Execute a transaction
@@ -47,7 +49,7 @@ class LSMStorage {
     }
   }
 
-  /// Initialize the storage engine
+  @override
   Future<void> init() async {
     // Create data directory if it doesn't exist
     final dir = Directory(path);
@@ -80,7 +82,7 @@ class LSMStorage {
     }
   }
 
-  /// Put a key-value pair into the storage
+  @override
   Future<void> put<T>(String key, T value) async {
     _memTable.put(key, value);
     _changeController.add(ChangeEvent(
@@ -97,6 +99,7 @@ class LSMStorage {
   }
 
   /// Put multiple key-value pairs into the storage in a single batch
+  @override
   Future<void> putAll<T>(Map<String, T> entries) async {
     // Add all entries to memtable
     for (final entry in entries.entries) {
@@ -165,7 +168,7 @@ class LSMStorage {
     }
   }
 
-  /// Get a value by key
+  @override
   Future<T?> get<T>(String key) async {
     final value = await _memTable.get(key);
     if (value != null) return value as T;
@@ -178,7 +181,7 @@ class LSMStorage {
     return null;
   }
 
-  /// Delete a key
+  @override
   Future<void> delete(String key) async {
     _memTable.delete(key);
     _changeController.add(ChangeEvent(
@@ -189,7 +192,7 @@ class LSMStorage {
     ));
   }
 
-  /// Get all items of a specific type
+  @override
   Future<List<T>> getAll<T>() async {
     final results = <T>[];
 
@@ -203,10 +206,9 @@ class LSMStorage {
     // Get items from SSTables
     for (final sstable in _sstables) {
       final entries = await sstable.getAll();
-      for (final key in entries.keys) {
-        final value = entries[key];
-        if (value is T) {
-          results.add(value);
+      for (final entry in entries.entries) {
+        if (entry.value is T) {
+          results.add(entry.value as T);
         }
       }
     }
@@ -214,16 +216,9 @@ class LSMStorage {
     return results;
   }
 
-  /// Get all keys in storage
-  Future<List<String>> keys() async {
-    return _memTable.keys.toList();
-  }
-
-  /// Close the storage engine
+  @override
   Future<void> close() async {
-    await _flushMemTable();
     await _compactionManager.dispose();
-    _changeController.close();
   }
 }
 

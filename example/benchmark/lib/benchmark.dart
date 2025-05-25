@@ -26,8 +26,11 @@ class QuantaDBWrapper implements Database {
       await _db.put(key, value);
 
   @override
-  Future<void> putAll(Map<String, dynamic> entries) async =>
-      await _db.storage.putAll(entries);
+  Future<void> putAll(Map<String, dynamic> entries) async {
+    for (final entry in entries.entries) {
+      await _db.put(entry.key, entry.value);
+    }
+  }
 
   @override
   Future<dynamic> get(String key) async => await _db.get(key);
@@ -119,7 +122,7 @@ class SQLiteDBWrapper implements Database {
 
   @override
   Future<void> putAll(Map<String, dynamic> entries) async {
-    for (var entry in entries.entries) {
+    for (final entry in entries.entries) {
       await _db.insert(
         'kv_store',
         {'key': entry.key, 'value': entry.value.toString()},

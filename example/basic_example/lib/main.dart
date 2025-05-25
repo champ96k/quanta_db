@@ -4,7 +4,8 @@ import 'package:quanta_db/quanta_db.dart';
 
 void main() async {
   // Open the database
-  final db = await QuantaDB.open('my_database');
+  final db = await QuantaDB()
+    ..open(path: 'my_database');
 
   try {
     // Store some data

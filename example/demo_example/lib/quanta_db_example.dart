@@ -7,7 +7,8 @@ import 'model/user.dart';
 void main() async {
   // Initialize the database
 
-  final db = await QuantaDB.open('complete_example');
+  final db = QuantaDB();
+  await db.open(path: 'complete_example');
 
   await db.init();
 
