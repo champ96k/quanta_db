@@ -46,7 +46,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pylint
+        pip install pylint requests
 
     - name: Run code review
       run: python .github/workflows/review_code.py
