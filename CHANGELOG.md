@@ -8,7 +8,11 @@
 - Added support for Flutter integration
 - Included code generation capabilities
 
-
 ## 0.0.2
 
 - Readme updated
+
+## 0.0.3
+
+- Documentation added
+- Improve pub score

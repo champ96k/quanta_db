@@ -1,6 +1,6 @@
 name: quanta_db
 description: "A high-performance pure Dart database implementation using LSM-Tree architecture."
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/champ96k/quanta_db
 repository: https://github.com/champ96k/quanta_db
 topics:
@@ -19,24 +19,24 @@ dependencies:
     sdk: flutter
 
   # Cryptographic operations for data security
-  crypto: ^3.0.3      
+  crypto: ^3.0.3
 
   # Optimized data structures and algorithms
-  collection: ^1.18.0 
+  collection: ^1.18.0
 
   # Annotation support for code generation
-  path: ^1.8.3        
-  meta: ^1.12.0       
+  path: ^1.8.3
+  meta: ^1.12.0
 
   # Platform-specific file system access
-  path_provider: ^2.1.2 
+  path_provider: ^2.1.2
 
   # Build system for code generation
-  build: ^2.4.1       
-  source_gen: ^1.5.0 
+  build: ^2.4.1
+  source_gen: ^1.5.0
 
   # Dart code analysis and parsing
-  analyzer: ^6.4.1    
+  analyzer: ^6.4.1
 
 dev_dependencies:
   flutter_test:
