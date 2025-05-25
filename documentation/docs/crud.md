@@ -28,7 +28,7 @@ class User {
   });
 
   // Add methods for serialization/deserialization if not using code generation
-  // Map<String, dynamic> toMap() { ... }
+  // Map<String, dynamic> toMap() { .... }
   // static User fromMap(Map<String, dynamic> map) { ... }
 }
 ```
@@ -118,4 +118,4 @@ Future<void> _demonstrateCRUD(QuantaDB db) async {
 
 The `delete` method removes the key-value pair associated with the given key.
 
-These basic CRUD operations are the foundation for managing data in QuantaDB. In the next sections, we will explore more advanced topics like querying and transactions. 
+These basic CRUD operations are the foundation for managing data in QuantaDB. In the next sections, we will explore more advanced topics like querying and transactions.

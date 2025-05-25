@@ -6,7 +6,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'QuantaDB',
-  tagline: 'A powerful and efficient database solution',
+  tagline: 'High-performance NoSQL local database built entirely in Dart',
   favicon: 'img/logo_small.png',
 
   // Set the production url of your site here

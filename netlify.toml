@@ -1,0 +1,32 @@
+[build]
+  base = "documentation"
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Only deploy when changes are in the documentation folder
+[build.processing]
+  skip_processing = false
+
+# Ignore changes outside documentation folder
+[build.processing.html]
+  pretty_urls = true
+
+# Configure branch deployments
+[context.production]
+  command = "npm run build"
+
+# Configure PR previews
+[context.deploy-preview]
+  command = "npm run build"
+
+# Configure branch deploys
+[context.branch-deploy]
+  command = "npm run build"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200 
