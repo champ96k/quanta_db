@@ -43,7 +43,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
       if (_hasAnnotation(field, 'QuantaIgnore')) continue;
 
       final fieldName = field.name;
-      final fieldType = field.type.getDisplayString(withNullability: true);
+      final fieldType = field.type.getDisplayString(withNullability: false);
       final annotations = _formatAnnotations(field.metadata);
 
       if (annotations.isEmpty) {
@@ -114,7 +114,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
       if (_hasAnnotation(field, 'QuantaIgnore')) continue;
 
       final fieldName = field.name;
-      final fieldType = field.type.getDisplayString(withNullability: true);
+      final fieldType = field.type.getDisplayString(withNullability: false);
       adapterBuffer
           .writeln('    $fieldName: json[\'$fieldName\'] as $fieldType,');
     }
@@ -169,7 +169,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
       daoBuffer.writeln('\n  // Index methods');
       for (final field in indexedFields) {
         final fieldName = field.name;
-        final fieldType = field.type.getDisplayString(withNullability: true);
+        final fieldType = field.type.getDisplayString(withNullability: false);
         daoBuffer.writeln('''
   Future<List<$className>> findBy${_capitalize(fieldName)}($fieldType value) async {
     final items = await getAll();
@@ -186,7 +186,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
       daoBuffer.writeln('\n  // Reactive methods');
       for (final field in reactiveFields) {
         final fieldName = field.name;
-        final fieldType = field.type.getDisplayString(withNullability: true);
+        final fieldType = field.type.getDisplayString(withNullability: false);
         daoBuffer.writeln('''
   Stream<$fieldType> watch${_capitalize(fieldName)}($className instance) async* {
     final stream = _db.onChange.where((event) => 

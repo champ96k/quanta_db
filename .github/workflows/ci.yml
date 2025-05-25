@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Dart
+      uses: dart-lang/setup-dart@v1
+      with:
+        sdk: '3.0.0'
+    
+    - name: Install dependencies
+      run: dart pub get
+    
+    - name: Verify formatting
+      run: dart format --output=none --set-exit-if-changed .
+    
+    - name: Analyze project source
+      run: dart analyze --fatal-infos
+    
+    - name: Run tests
+      run: dart test
+    
+    - name: Run example tests
+      run: |
+        cd example/basic_example
+        dart pub get
+        dart run lib/main.dart
+    
+    - name: Check pub.dev score
+      run: |
+        dart pub publish --dry-run
+        dart pub outdated --mode=null-safety
+    
+    - name: Build documentation
+      run: |
+        cd documentation
+        npm install
+        npm run build 
