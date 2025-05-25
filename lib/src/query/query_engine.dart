@@ -4,8 +4,7 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'package:quanta_db/src/common/change_types.dart';
-import 'package:quanta_db/src/storage/lsm_storage.dart' as lsm;
-import 'package:quanta_db/src/utils/xxhash.dart';
+import 'package:quanta_db/src/storage/storage_interface.dart';
 
 class Query<T> {
   Query({
@@ -81,19 +80,17 @@ class QueryEngine {
     _storage.onChange.listen((event) => _handleStorageChange(event));
     _startChangePropagationWorker();
   }
-  final lsm.LSMStorage _storage;
+  final StorageInterface _storage;
   final _changeController = StreamController<ChangeEvent>.broadcast();
-  final _objectHashes = <String, int>{};
   final _batchUpdates = <ChangeEvent>[];
   Timer? _batchTimer;
   Isolate? _worker;
-  SendPort? _sendPort;
   ReceivePort? _handshakePort;
   ReceivePort? _messagePort;
   StreamSubscription? _storageSubscription;
 
   /// Get the storage instance
-  lsm.LSMStorage get storage => _storage;
+  StorageInterface get storage => _storage;
 
   /// Execute a query and return the results
   Future<List<T>> query<T>(Query<T> query) async {
@@ -150,7 +147,7 @@ class QueryEngine {
               sink.add([data]);
             },
           ))
-          .transform(_createAggregationTransformer<T>(query.aggregations))
+          .transform(_createAggregationTransformer<T, R>(query.aggregations))
           .cast<R>();
     }
 
@@ -205,7 +202,7 @@ class QueryEngine {
 
           if (currentLimit != null && currentLimit! <= 0) {
             buffer.clear();
-            return;
+            break;
           }
 
           final item = buffer.removeAt(0);
@@ -219,105 +216,76 @@ class QueryEngine {
     );
   }
 
-  StreamTransformer<List<T>, dynamic> _createAggregationTransformer<T>(
+  StreamTransformer<List<T>, R> _createAggregationTransformer<T, R>(
       List<QueryAggregation<T>> aggregations) {
-    if (aggregations.isEmpty) {
-      return StreamTransformer.fromHandlers(
-        handleData: (data, sink) => sink.add(data),
-      );
-    }
-
-    final buffer = <T>[];
-    return StreamTransformer<List<T>, dynamic>.fromHandlers(
+    return StreamTransformer.fromHandlers(
       handleData: (data, sink) {
-        buffer.addAll(data);
-        final result = aggregations.first(buffer);
-        sink.add(result);
+        final results = <dynamic>[];
+        for (final aggregation in aggregations) {
+          results.add(aggregation(data));
+        }
+        sink.add(results.length == 1 ? results.first : results);
       },
     );
   }
 
-  /// Start the change propagation worker isolate
-  Future<void> _startChangePropagationWorker() async {
+  void _handleStorageChange(ChangeEvent event) {
+    if (event.changeType == ChangeType.batch) {
+      _batchUpdates.addAll(event.value as List<ChangeEvent>);
+      _batchTimer?.cancel();
+      _batchTimer = Timer(const Duration(milliseconds: 100), () {
+        _processBatchUpdates();
+      });
+    } else {
+      _changeController.add(event);
+    }
+  }
+
+  void _processBatchUpdates() {
+    for (final event in _batchUpdates) {
+      _changeController.add(event);
+    }
+    _batchUpdates.clear();
+  }
+
+  void _startChangePropagationWorker() {
     _handshakePort = ReceivePort();
     _messagePort = ReceivePort();
 
-    _worker = await Isolate.spawn(
+    Isolate.spawn(
       _changePropagationWorker,
       [_handshakePort!.sendPort, _messagePort!.sendPort],
-    );
+    ).then((isolate) {
+      _worker = isolate;
+      _handshakePort!.first.then((sendPort) {
+        _handshakePort!.close();
+        _handshakePort = null;
+      });
+    });
 
-    _sendPort = await _handshakePort!.first as SendPort;
-    _handshakePort!.close();
-    _handshakePort = null;
-
-    _messagePort!.listen(_handleWorkerMessage);
-  }
-
-  /// Handle messages from the worker isolate
-  void _handleWorkerMessage(dynamic message) {
-    if (message is ChangeEvent) {
-      _changeController.add(message);
-    } else if (message is List<ChangeEvent>) {
-      for (final event in message) {
-        _changeController.add(event);
-      }
-    }
-  }
-
-  void _handleStorageChange(ChangeEvent event) {
-    if (event.type == dynamic) {
-      _changeController.add(event);
-      return;
-    }
-
-    final key = event.key;
-    final value = event.value;
-
-    // Calculate hash of the new value
-    final newHash =
-        value != null ? XXHash.hash64(value.toString().codeUnits) : 0;
-
-    // Check if the value has actually changed
-    if (_objectHashes[key] == newHash) {
-      return;
-    }
-
-    _objectHashes[key] = newHash;
-    _batchUpdates.add(event);
-
-    // Schedule batch update
-    _batchTimer?.cancel();
-    _batchTimer = Timer(const Duration(milliseconds: 16), () {
-      if (_batchUpdates.isNotEmpty) {
-        final batchEvent = ChangeEvent(
-          key: 'batch',
-          value: _batchUpdates,
-          type: List<ChangeEvent>,
-          changeType: ChangeType.batch,
-        );
-        _changeController.add(batchEvent);
-        _sendPort?.send(_batchUpdates);
-        _batchUpdates.clear();
+    _messagePort!.listen((message) {
+      if (message is ChangeEvent) {
+        _changeController.add(message);
       }
     });
   }
 
-  Future<void> dispose() async {
-    _batchTimer?.cancel();
+  void _stopChangePropagationWorker() {
     _worker?.kill();
     _handshakePort?.close();
     _messagePort?.close();
-    await _storageSubscription?.cancel();
-    await _changeController.close();
-    _sendPort = null;
     _handshakePort = null;
     _messagePort = null;
-    _storageSubscription = null;
+  }
+
+  void dispose() {
+    _stopChangePropagationWorker();
+    _batchTimer?.cancel();
+    _storageSubscription?.cancel();
+    _changeController.close();
   }
 }
 
-/// Worker function that runs in a separate isolate for change propagation
 void _changePropagationWorker(List<dynamic> args) {
   final handshakePort = args[0] as SendPort;
   final messagePort = args[1] as SendPort;
@@ -326,11 +294,8 @@ void _changePropagationWorker(List<dynamic> args) {
   handshakePort.send(receivePort.sendPort);
 
   receivePort.listen((message) {
-    if (message is List<ChangeEvent>) {
-      // Process batch of changes
-      for (final event in message) {
-        messagePort.send(event);
-      }
+    if (message is ChangeEvent) {
+      messagePort.send(message);
     }
   });
 }

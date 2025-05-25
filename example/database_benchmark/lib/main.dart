@@ -106,8 +106,8 @@ class _BenchmarkDashboardState extends State<BenchmarkDashboard> {
     final initStopwatch = Stopwatch()..start();
     final dir = await getApplicationDocumentsDirectory();
     final dbPath = path.join(dir.path, 'quanta_benchmark');
-    final db = await QuantaDB.open(dbPath);
-    await db.init();
+    final db = QuantaDB();
+    await db.open(path: dbPath);
     initStopwatch.stop();
     results[BenchmarkType.init] = initStopwatch.elapsedMilliseconds.toDouble();
 

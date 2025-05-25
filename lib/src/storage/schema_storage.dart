@@ -140,7 +140,8 @@ class SchemaStorage {
   /// Get all models and their versions
   Future<Map<String, int>> getAllModelVersions() async {
     final models = <String, int>{};
-    final keys = await _storage.keys();
+    final allEntries = await _storage.getAll<dynamic>();
+    final keys = allEntries.map((e) => e['key'] as String).toList();
 
     for (final key in keys) {
       if (key.startsWith(_versionPrefix)) {

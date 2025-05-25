@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:isolate';
 
 import 'package:quanta_db/src/storage/sstable.dart';
 import 'package:quanta_db/src/storage/memtable.dart';
@@ -11,12 +10,9 @@ class CompactionManager {
   }
 
   final String _dataDir;
-  Isolate? _worker;
-  SendPort? _sendPort;
-  ReceivePort? _handshakePort;
-  ReceivePort? _messagePort;
   final _compactionQueue = <CompactionTask>[];
   bool _isCompacting = false;
+  Timer? _compactionTimer;
 
   /// Schedule a compaction task
   void scheduleCompaction(List<SSTable> tables, int targetLevel) {
@@ -24,21 +20,9 @@ class CompactionManager {
     _triggerCompaction();
   }
 
-  /// Start the compaction worker isolate
-  Future<void> _startCompactionWorker() async {
-    _handshakePort = ReceivePort();
-    _messagePort = ReceivePort();
-
-    _worker = await Isolate.spawn(
-      _compactionWorker,
-      [_handshakePort!.sendPort, _messagePort!.sendPort, _dataDir],
-    );
-
-    _sendPort = await _handshakePort!.first as SendPort;
-    _handshakePort!.close();
-    _handshakePort = null;
-
-    _messagePort!.listen(_handleCompactionResult);
+  /// Start the compaction worker
+  void _startCompactionWorker() {
+    // No-op for web platform
   }
 
   /// Trigger compaction if not already running
@@ -47,29 +31,22 @@ class CompactionManager {
     _isCompacting = true;
 
     final task = _compactionQueue.removeAt(0);
-    _sendPort?.send(task);
-  }
-
-  /// Handle compaction results from the worker
-  void _handleCompactionResult(dynamic message) {
-    if (message is CompactionResult) {
+    _performCompaction(task, _dataDir).then((result) {
       // Delete old tables and add new one
-      for (final table in message.deletedTables) {
+      for (final table in result.deletedTables) {
         table.delete();
       }
       _isCompacting = false;
       _triggerCompaction();
-    }
+    }).catchError((error) {
+      _isCompacting = false;
+      _triggerCompaction();
+    });
   }
 
   /// Clean up resources
   Future<void> dispose() async {
-    _worker?.kill();
-    _handshakePort?.close();
-    _messagePort?.close();
-    _handshakePort = null;
-    _messagePort = null;
-    _sendPort = null;
+    _compactionTimer?.cancel();
   }
 }
 
@@ -85,27 +62,6 @@ class CompactionResult {
   CompactionResult(this.newTable, this.deletedTables);
   final SSTable newTable;
   final List<SSTable> deletedTables;
-}
-
-/// Worker function that runs in a separate isolate
-void _compactionWorker(List<dynamic> args) {
-  final handshakePort = args[0] as SendPort;
-  final messagePort = args[1] as SendPort;
-  final dataDir = args[2] as String;
-  final receivePort = ReceivePort();
-
-  handshakePort.send(receivePort.sendPort);
-
-  receivePort.listen((message) async {
-    if (message is CompactionTask) {
-      try {
-        final result = await _performCompaction(message, dataDir);
-        messagePort.send(result);
-      } catch (e) {
-        messagePort.send(CompactionError(e.toString()));
-      }
-    }
-  });
 }
 
 /// Perform the actual compaction of SSTables

@@ -5,7 +5,9 @@ Future<void> main() async {
   const operations = 10000; // Number of operations to perform
 
   // QuantaDB
-  final quanta = QuantaDBWrapper(await QuantaDB.open('benchmark_quanta'));
+  final db = QuantaDB();
+  await db.open(path: 'benchmark_quanta');
+  final quanta = QuantaDBWrapper(db);
   await quanta.init();
   final quantaWrite = await _benchmarkWrite(quanta, operations, 'QuantaDB');
   final quantaRead = await _benchmarkRead(quanta, operations, 'QuantaDB');

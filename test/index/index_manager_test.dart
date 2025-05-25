@@ -13,7 +13,7 @@ void main() {
   late IndexManager indexManager;
 
   setUp(() {
-    storage = StorageManager();
+    storage = StorageManager('test_db');
     serializer = Serializer();
     indexManager = IndexManager(storage, serializer);
   });

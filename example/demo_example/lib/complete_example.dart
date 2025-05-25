@@ -7,7 +7,8 @@ import 'model/user.dart';
 
 void main() async {
   // Initialize the database
-  final db = await QuantaDB.open('complete_example');
+  final db = QuantaDB();
+  await db.open(path: 'complete_example');
   await db.init();
 
   try {
@@ -81,7 +82,7 @@ Future<void> _demonstrateCRUD(QuantaDB db) async {
 
 Future<void> _demonstrateQueries(QueryEngine queryEngine) async {
   // Store some test data
-  await _storeTestData(queryEngine.storage);
+  await _storeTestData(queryEngine.storage as LSMStorage);
 
   // Basic query with filtering
   final activeUsers = await queryEngine.query<User>(
@@ -113,7 +114,7 @@ Future<void> _demonstrateQueries(QueryEngine queryEngine) async {
 
 Future<void> _demonstrateTransactions(QuantaDB db) async {
   // Start a transaction
-  await db.storage.transaction((txn) async {
+  await (db.storage as LSMStorage).transaction((txn) async {
     // Create multiple users atomically
     final user1 = User(
       id: 'txn:1',
@@ -199,7 +200,7 @@ Future<void> _demonstrateReactiveQueries(QueryEngine queryEngine) async {
 
   // Make some changes to trigger updates
   await Future.delayed(const Duration(seconds: 1));
-  await _storeTestData(queryEngine.storage);
+  await _storeTestData(queryEngine.storage as LSMStorage);
   await Future.delayed(const Duration(seconds: 1));
 
   // Clean up subscriptions
@@ -233,9 +234,8 @@ Future<void> _storeTestData(LSMStorage storage) async {
     ),
   ];
 
-  for (final user in users) {
-    await storage.put('user:${user.id}', user);
-  }
+  final userMap = {for (var user in users) 'user:${user.id}': user};
+  await storage.putAll(userMap);
   print('Test data stored successfully');
 }
 
