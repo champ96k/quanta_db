@@ -1,12 +1,13 @@
+> ⚠️ **BETA RELEASE**  
+> This project is currently in **beta**. While it's functional and available for use, it may still undergo changes. Please use with caution in production environments and report any bugs or issues.
+
+<br>
+
 # QuantaDB: A High-Performance Pure Dart Local Database
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/champ96k/quanta_db/master/logo.png" alt="QuantaDB Logo" width="400"/>
 </p>
-
-[![pub package](https://img.shields.io/pub/v/quanta_db.svg)](https://pub.dev/packages/quanta_db)
-
-**⚠️ Warning: This project is currently in beta development. Use accordingly for development and testing purposes.**
 
 QuantaDB is a modern, high-performance **NoSQL** local database built entirely in Dart. It's designed to provide a fast, reliable, and easy-to-use data storage solution for both Flutter applications and pure Dart projects.
 
