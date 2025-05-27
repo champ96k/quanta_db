@@ -111,7 +111,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  quanta_db: ^0.0.4
+  quanta_db: ^0.0.5
 ```
 
 2. **Install it**
