@@ -1,23 +1,18 @@
 ---
-id: schema-versioning
+id: schema_versioning
 title: Schema Versioning
-sidebar_label: Schema Versioning
-sidebar_position: 1
-description: Automatic schema versioning and migration system
+sidebar_position: 13
 ---
 
 # Schema Versioning
 
-> **Important Note**: You don't need to write any migration code manually! The schema versioning system is fully automated. When you make changes to your model classes, QuantaDB automatically:
-> - Detects schema changes
-> - Generates appropriate migration files
-> - Manages version tracking
-> - Handles rollbacks
-> - Manages the migration registry
-> - Handles schema storage
-> - Builds migrations
-> 
-> The examples below are for understanding how the system works internally, but in practice, you'll never need to write any of this code yourself.
+
+:::caution Important Note
+You don't need to write any migration code manually! The schema versioning system is fully automated. When you make changes to your model classes, QuantaDB automatically.
+:::
+
+
+The examples below are for understanding how the system works internally, but in practice, you'll never need to write any of this code yourself.
 
 QuantaDB provides a robust schema versioning system that automatically manages database schema evolution through migrations.
 

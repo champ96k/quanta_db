@@ -1,9 +1,7 @@
 ---
-id: query-engine
+id: query_engine
 title: Query Engine
-sidebar_label: Query Engine
-sidebar_position: 3
-description: Powerful and flexible query system with automatic optimization
+sidebar_position: 12
 ---
 
 # Query Engine

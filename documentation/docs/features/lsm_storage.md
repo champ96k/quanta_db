@@ -1,9 +1,7 @@
 ---
-id: lsm-storage
+id: lsm_storage
 title: LSM Storage Engine
-sidebar_label: LSM Storage
-sidebar_position: 2
-description: High-performance Log-Structured Merge Tree storage engine
+sidebar_position: 11
 ---
 
 # LSM Storage Engine
