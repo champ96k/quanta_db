@@ -1,0 +1,11 @@
+{
+    "label": "Features",
+    "position": 2,
+    "className": "features",
+    "link": {
+        "type": "generated-index",
+        "title": "Features",
+        "description": "Explore QuantaDB's powerful features and capabilities",
+        "slug": "/features"
+    }
+}

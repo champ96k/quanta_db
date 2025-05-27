@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:quanta_db/src/storage/lsm_storage.dart';
+import 'package:quanta_db/src/schema/schema_migration.dart';
 import 'dart:io';
 
 /// Represents a schema version
@@ -7,13 +8,6 @@ class SchemaVersion {
   const SchemaVersion(this.version, this.migrations);
   final int version;
   final List<SchemaMigration> migrations;
-}
-
-/// Base class for schema migrations
-abstract class SchemaMigration {
-  const SchemaMigration();
-  Future<void> up(LSMStorage storage);
-  Future<void> down(LSMStorage storage);
 }
 
 /// Manages schema migrations
@@ -69,9 +63,10 @@ class SchemaManager {
   Future<void> createMigration(String name, int version) async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final migration = '''
-import 'package:quanta_db/src/migration/schema_migration.dart';
+import 'package:quanta_db/src/schema/schema_migration.dart';
+import 'package:quanta_db/src/storage/lsm_storage.dart';
 
-class ${_toPascalCase(name)}Migration extends SchemaMigration {
+class ${_toPascalCase(name)}Migration implements SchemaMigration {
   @override
   Future<void> up(LSMStorage storage) async {
     // TODO: Implement up migration
