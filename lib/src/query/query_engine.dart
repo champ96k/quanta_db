@@ -14,12 +14,26 @@ class Query<T> {
     this.limit,
     this.offset,
     this.aggregations = const [],
-  });
+  }) {
+    _validateQuery();
+  }
   final List<QueryPredicate<T>> predicates;
   final List<QuerySort<T>> sorts;
   final int? limit;
   final int? offset;
   final List<QueryAggregation<T>> aggregations;
+
+  void _validateQuery() {
+    if (limit != null && limit! < 0) {
+      throw ArgumentError('Limit must be non-negative');
+    }
+    if (offset != null && offset! < 0) {
+      throw ArgumentError('Offset must be non-negative');
+    }
+    if (limit != null && offset != null && limit! + offset! < 0) {
+      throw ArgumentError('Limit + offset must be non-negative');
+    }
+  }
 
   Query<T> where(QueryPredicate<T> predicate) {
     return Query(
@@ -97,6 +111,7 @@ class QueryEngine {
 
   /// Execute a query and return the results
   Future<List<T>> query<T>(Query<T> query) async {
+    query._validateQuery();
     final results = <T>[];
 
     // Get all items of type T from storage
@@ -135,6 +150,7 @@ class QueryEngine {
 
   /// Watch for changes matching a query
   Stream<R> watch<T, R>(Query<T> query) {
+    query._validateQuery();
     final stream = _changeController.stream
         .where((event) => event.type == T)
         .map((event) => event.value as T)
