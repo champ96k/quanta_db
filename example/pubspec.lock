@@ -510,10 +510,10 @@ packages:
   quanta_db:
     dependency: "direct main"
     description:
-      path: "../.."
+      path: ".."
       relative: true
     source: path
-    version: "0.0.3"
+    version: "0.0.4"
   shelf:
     dependency: transitive
     description:
