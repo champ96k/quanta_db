@@ -4,16 +4,24 @@ import 'dart:io';
 
 /// The main database class that provides a high-level interface to the LSM storage engine
 class QuantaDB {
-  /// Create a new QuantaDB instance
+  /// Private constructor for QuantaDB that initializes the storage engine and query engine
   ///
-  /// `dbName` is the name of the database
-  /// The database will be stored in a platform-specific secure location
+  /// [storage] The LSM storage engine instance that handles data persistence
   QuantaDB._(this.storage) : queryEngine = QueryEngine(storage);
 
+  /// The LSM storage engine instance that handles data persistence
   final LSMStorage storage;
+
+  /// The query engine instance that handles data retrieval and filtering
   final QueryEngine queryEngine;
+
+  /// Flag indicating whether the database has been initialized
   bool _isInitialized = false;
 
+  /// Creates and initializes a new QuantaDB instance
+  ///
+  /// [dbName] The name of the database to create/open
+  /// Returns a [Future] that completes with the initialized [QuantaDB] instance
   static Future<QuantaDB> open(String dbName) async {
     String dbDir;
 
