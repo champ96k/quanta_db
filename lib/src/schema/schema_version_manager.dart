@@ -34,7 +34,16 @@ class MigrationRegistry {
   }
 }
 
-/// Manages schema versions and migrations for entities
+/// Manages schema versions and migrations for QuantaDB entities.
+///
+/// This class handles:
+/// - Tracking and updating schema versions for each entity
+/// - Recording and retrieving migration history
+/// - Rolling back to previous schema versions
+/// - Loading and executing migration classes
+/// - Importing and exporting schema version information
+///
+/// It uses the underlying [LSMStorage] to persist version and migration data.
 class SchemaVersionManager {
   SchemaVersionManager(this._storage) : _versionCache = {};
 

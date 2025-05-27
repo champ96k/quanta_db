@@ -1,10 +1,22 @@
 import 'package:build/build.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
-import 'package:quanta_db/src/migration/migration_generator.dart';
-import 'package:quanta_db/src/storage/schema_storage.dart';
-import 'package:quanta_db/src/schema/schema_version_manager.dart';
+import 'package:quanta_db/quanta_db.dart';
 
+/// Creates a builder that generates migration scripts for schema changes.
+Builder migrationBuilder(BuilderOptions options) =>
+    MigrationBuilder(SchemaStorage(LSMStorage('migrations')));
+
+/// A builder that generates migration scripts for schema changes in QuantaDB entities.
+///
+/// This builder is used to automatically generate migration scripts when schema changes
+/// are detected in classes annotated with [QuantaEntity]. It handles:
+/// - Field additions, modifications, and removals
+/// - Index changes
+/// - Schema version management
+///
+/// The generated migrations include both up and down migrations to support
+/// both forward and rollback operations.
 class MigrationBuilder implements Builder {
   MigrationBuilder(this._schemaStorage)
       : _versionManager = SchemaVersionManager(_schemaStorage.storage);

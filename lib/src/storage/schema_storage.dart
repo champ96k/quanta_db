@@ -1,6 +1,16 @@
 import 'dart:convert';
 import 'package:quanta_db/src/storage/lsm_storage.dart';
 
+/// Manages the storage and retrieval of schema information for QuantaDB entities.
+///
+/// This class handles:
+/// - Schema version tracking
+/// - Schema storage and retrieval
+/// - Migration history management
+/// - Schema rollback operations
+///
+/// It uses the underlying [LSMStorage] to persist schema information and provides
+/// methods for managing schema versions and migrations.
 class SchemaStorage {
   SchemaStorage(this._storage);
   final LSMStorage _storage;

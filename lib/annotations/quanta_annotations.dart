@@ -93,6 +93,20 @@ class QuantaManyToMany {
 }
 
 /// Annotation to mark a field as encrypted
+///
+/// When applied to a field, this annotation indicates that the field's value
+/// should be encrypted at rest. The encryption is handled automatically by
+/// QuantaDB using the configured encryption algorithm.
+///
+/// Example:
+/// ```dart
+/// class User {
+///   @QuantaEncrypted()
+///   final String password;
+///
+///   User({required this.password});
+/// }
+/// ```
 class QuantaEncrypted {
   const QuantaEncrypted();
 }
