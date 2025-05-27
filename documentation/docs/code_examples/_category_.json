@@ -1,0 +1,11 @@
+{
+    "label": "Code Examples",
+    "position": 3,
+    "className": "code-examples",
+    "link": {
+        "type": "generated-index",
+        "title": "Code Examples",
+        "description": "Learn how to use QuantaDB with practical code examples",
+        "slug": "/code-examples"
+    }
+}

@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:quanta_db/src/schema/schema_version_manager.dart';
+
 /// Generates migration scripts based on schema changes
 class MigrationGenerator {
-  MigrationGenerator();
+  MigrationGenerator(this._versionManager);
+  final SchemaVersionManager _versionManager;
 
   String _timestamp() {
     return DateTime.now().millisecondsSinceEpoch.toString();
@@ -26,8 +29,6 @@ class MigrationGenerator {
   /// Generate migration script for schema changes
   Future<void> generateMigration(
     String entityName,
-    int oldVersion,
-    int newVersion,
     Map<String, dynamic> oldSchema,
     Map<String, dynamic> newSchema, {
     String? outputDirectory,
@@ -35,10 +36,14 @@ class MigrationGenerator {
     final changes = detectSchemaChanges(oldSchema, newSchema);
     if (changes.isEmpty) return;
 
+    // Get current and next version
+    final currentVersion = await _versionManager.getVersion(entityName);
+    final nextVersion = await _versionManager.getNextVersion(entityName);
+
     final migration = _generateMigrationScript(
       entityName,
-      oldVersion,
-      newVersion,
+      currentVersion,
+      nextVersion,
       changes,
     );
 
@@ -48,6 +53,14 @@ class MigrationGenerator {
     final file = File('$dir/$fileName');
     await file.parent.create(recursive: true);
     await file.writeAsString(migration);
+
+    // Record the migration
+    await _versionManager.recordMigration(
+      entityName,
+      currentVersion,
+      nextVersion,
+      fileName,
+    );
   }
 
   /// Detect changes between old and new schema
@@ -57,47 +70,46 @@ class MigrationGenerator {
   ) {
     final changes = <String, List<Map<String, dynamic>>>{
       'added': [],
-      'removed': [],
       'modified': [],
+      'removed': [],
       'indexChanges': [],
     };
 
-    // Detect field changes
+    // Compare fields
     final oldFields = oldSchema['fields'] as Map<String, dynamic>;
     final newFields = newSchema['fields'] as Map<String, dynamic>;
 
     // Find added and modified fields
-    newFields.forEach((name, newField) {
-      if (!oldFields.containsKey(name)) {
+    for (final field in newFields.entries) {
+      if (!oldFields.containsKey(field.key)) {
         changes['added']!.add({
-          'name': name,
-          'type': newField['type'],
-          'nullable': newField['nullable'],
+          'name': field.key,
+          'type': field.value['type'],
+          'nullable': field.value['nullable'],
         });
-      } else if (oldFields[name]!['type'] != newField['type'] ||
-          oldFields[name]!['nullable'] != newField['nullable']) {
+      } else if (oldFields[field.key] != field.value) {
         changes['modified']!.add({
-          'name': name,
-          'oldType': oldFields[name]!['type'],
-          'newType': newField['type'],
-          'oldNullable': oldFields[name]!['nullable'],
-          'newNullable': newField['nullable'],
+          'name': field.key,
+          'oldType': oldFields[field.key]['type'],
+          'newType': field.value['type'],
+          'oldNullable': oldFields[field.key]['nullable'],
+          'newNullable': field.value['nullable'],
         });
       }
-    });
+    }
 
     // Find removed fields
-    oldFields.forEach((name, oldField) {
-      if (!newFields.containsKey(name)) {
+    for (final field in oldFields.entries) {
+      if (!newFields.containsKey(field.key)) {
         changes['removed']!.add({
-          'name': name,
-          'type': oldField['type'],
-          'nullable': oldField['nullable'],
+          'name': field.key,
+          'type': field.value['type'],
+          'nullable': field.value['nullable'],
         });
       }
-    });
+    }
 
-    // Detect index changes
+    // Compare indexes
     final oldIndexes = oldSchema['indexes'] as List<dynamic>;
     final newIndexes = newSchema['indexes'] as List<dynamic>;
 
@@ -166,13 +178,12 @@ class ${_toPascalCase(entityName)}Migration extends SchemaMigration {
     if ((changes['added'] ?? []).isNotEmpty) {
       buffer.writeln('    // Handle field additions');
       for (final field in changes['added']!) {
-        final defaultValue = field['type'] == 'bool' ? 'false' : 'null';
         buffer.writeln('''
     // Add field: ${field['name']}
     await _addField(
       storage,
       '${field['name']}',
-      $defaultValue,
+      ${field['nullable'] ? 'null' : _getDefaultValue(field['type'])},
     );
 ''');
       }
@@ -209,20 +220,6 @@ class ${_toPascalCase(entityName)}Migration extends SchemaMigration {
       '${change['index']['name']}',
       [$fields],
       ${change['index']['unique']},
-    );
-''');
-        } else if (change['type'] == 'modified') {
-          final oldFields =
-              (change['oldFields'] as List).map((f) => "'$f'").join(', ');
-          final newFields =
-              (change['newFields'] as List).map((f) => "'$f'").join(', ');
-          buffer.writeln('''
-    // Modify index: ${change['name']}
-    await _modifyIndex(
-      storage,
-      '${change['name']}',
-      [$oldFields],
-      [$newFields],
     );
 ''');
         } else if (change['type'] == 'removed') {
@@ -377,86 +374,24 @@ class ${_toPascalCase(entityName)}Migration extends SchemaMigration {
 ''');
     }
 
-    // Only include index methods if there are index changes
-    if (indexChanges.isNotEmpty) {
-      buffer.writeln('''
-  // Helper methods for index operations
-  Future<void> _addIndex(
-    LSMStorage storage,
-    String indexName,
-    List<String> fields,
-    bool unique,
-  ) async {
-    // Get all existing documents
-    final documents = await storage.getAll<Map<String, dynamic>>();
-    
-    // Create index entries for each document
-    for (final doc in documents) {
-      final key = _buildIndexKey(fields, doc);
-      if (key != null) {
-        final indexStorageKey = 'index:\$indexName:\$key';
-        await storage.put(indexStorageKey, doc['id']);
-      }
-    }
-  }
-
-  Future<void> _modifyIndex(
-    LSMStorage storage,
-    String indexName,
-    List<String> oldFields,
-    List<String> newFields,
-  ) async {
-    // Get all existing documents
-    final documents = await storage.getAll<Map<String, dynamic>>();
-    
-    // Modify index entries for each document
-    for (final doc in documents) {
-      final oldKey = _buildIndexKey(oldFields, doc);
-      final newKey = _buildIndexKey(newFields, doc);
-      if (oldKey != null && newKey != null) {
-        final oldIndexKey = 'index:\$indexName:\$oldKey';
-        final newIndexKey = 'index:\$indexName:\$newKey';
-        await storage.delete(oldIndexKey);
-        await storage.put(newIndexKey, doc['id']);
-      }
-    }
-  }
-
-  Future<void> _removeIndex(
-    LSMStorage storage,
-    String indexName,
-  ) async {
-    // Get all existing documents
-    final documents = await storage.getAll<Map<String, dynamic>>();
-    
-    // Remove index entries for each document
-    for (final doc in documents) {
-      final key = _buildIndexKey([indexName.split(':')[1]], doc);
-      if (key != null) {
-        final indexStorageKey = 'index:\$indexName:\$key';
-        await storage.delete(indexStorageKey);
-      }
-    }
-  }
-
-  String? _buildIndexKey(List<String> fields, Map<String, dynamic> document) {
-    try {
-      final values = fields.map((field) {
-        final value = document[field];
-        if (value == null) return null;
-        return value.toString();
-      }).toList();
-
-      if (values.any((v) => v == null)) return null;
-      return values.join('|');
-    } catch (e) {
-      return null;
-    }
-  }
-''');
-    }
-
     buffer.writeln('}');
     return buffer.toString();
+  }
+
+  String _getDefaultValue(String type) {
+    switch (type) {
+      case 'String':
+        return "''";
+      case 'int':
+        return '0';
+      case 'double':
+        return '0.0';
+      case 'bool':
+        return 'false';
+      case 'DateTime':
+        return 'DateTime.now()';
+      default:
+        return 'null';
+    }
   }
 }

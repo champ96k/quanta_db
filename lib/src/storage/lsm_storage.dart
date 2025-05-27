@@ -82,17 +82,30 @@ class LSMStorage {
 
   /// Put a key-value pair into the storage
   Future<void> put<T>(String key, T value) async {
-    _memTable.put(key, value);
-    _changeController.add(ChangeEvent(
-      key: key,
-      value: value,
-      type: T,
-      changeType: ChangeType.insert,
-    ));
+    if (key.isEmpty) {
+      throw ArgumentError('Key cannot be empty');
+    }
+    if (value == null) {
+      throw ArgumentError('Value cannot be null');
+    }
 
-    // Check if memtable needs to be flushed
-    if (_memTable.size >= LSMConfig(dataDir: path).maxMemTableSize) {
-      await _flushMemTable();
+    try {
+      // Validate value type
+      _memTable.put(key, value);
+      _changeController.add(ChangeEvent(
+        key: key,
+        value: value,
+        type: T,
+        changeType: ChangeType.insert,
+      ));
+
+      // Check if memtable needs to be flushed
+      if (_memTable.size >= LSMConfig(dataDir: path).maxMemTableSize) {
+        await _flushMemTable();
+      }
+    } catch (e) {
+      if (e is TypeException) rethrow;
+      throw StorageException('Failed to put value: $e');
     }
   }
 
@@ -167,26 +180,61 @@ class LSMStorage {
 
   /// Get a value by key
   Future<T?> get<T>(String key) async {
-    final value = await _memTable.get(key);
-    if (value != null) return value as T;
-
-    for (final sstable in _sstables) {
-      final value = await sstable.get(key);
-      if (value != null) return value as T;
+    if (key.isEmpty) {
+      throw ArgumentError('Key cannot be empty');
     }
 
-    return null;
+    try {
+      final value = await _memTable.get(key);
+      if (value != null) {
+        if (value is! T) {
+          throw TypeException('Expected type $T but got ${value.runtimeType}');
+        }
+        return value;
+      }
+
+      for (final sstable in _sstables) {
+        final value = await sstable.get(key);
+        if (value != null) {
+          if (value is! T) {
+            throw TypeException(
+                'Expected type $T but got ${value.runtimeType}');
+          }
+          return value;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      if (e is TypeException) rethrow;
+      throw StorageException('Failed to get value: $e');
+    }
   }
 
   /// Delete a key
   Future<void> delete(String key) async {
-    _memTable.delete(key);
-    _changeController.add(ChangeEvent(
-      key: key,
-      value: null,
-      type: dynamic,
-      changeType: ChangeType.delete,
-    ));
+    if (key.isEmpty) {
+      throw ArgumentError('Key cannot be empty');
+    }
+
+    try {
+      // Check if key exists before deleting
+      final exists = await get(key) != null;
+      if (!exists) {
+        throw StorageException('Key not found: $key');
+      }
+
+      _memTable.delete(key);
+      _changeController.add(ChangeEvent(
+        key: key,
+        value: null,
+        type: dynamic,
+        changeType: ChangeType.delete,
+      ));
+    } catch (e) {
+      if (e is StorageException) rethrow;
+      throw StorageException('Failed to delete key: $e');
+    }
   }
 
   /// Get all items of a specific type
@@ -269,4 +317,26 @@ class Transaction {
     _memTable.clear();
     _changes.clear();
   }
+}
+
+/// Custom exceptions
+class StorageException implements Exception {
+  StorageException(this.message);
+  final String message;
+  @override
+  String toString() => 'StorageException: $message';
+}
+
+class TypeException implements Exception {
+  TypeException(this.message);
+  final String message;
+  @override
+  String toString() => 'TypeException: $message';
+}
+
+class ValidationException implements Exception {
+  ValidationException(this.message);
+  final String message;
+  @override
+  String toString() => 'ValidationException: $message';
 }

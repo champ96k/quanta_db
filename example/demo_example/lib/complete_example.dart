@@ -137,43 +137,114 @@ Future<void> _demonstrateTransactions(QuantaDB db) async {
   });
   print('Transaction completed successfully');
 
-  // Verify transaction results
+  // Add detailed verification
   final user1 = await db.get<User>('user:txn:1');
   final user2 = await db.get<User>('user:txn:2');
-  print('Transaction users: ${user1 != null && user2 != null}');
+  print('Transaction users:');
+  print('User 1: ${user1?.toJson()}');
+  print('User 2: ${user2?.toJson()}');
 }
 
 Future<void> _demonstrateErrorHandling(QuantaDB db) async {
+  print('\nTesting error handling scenarios:');
+
   try {
     // Try to get a non-existent key
-    await db.get('non-existent-key');
+    print('\n1. Getting non-existent key:');
+    final result = await db.get('non-existent-key');
+    print('Result: $result'); // Should print null
   } catch (e) {
-    print('Expected error for non-existent key: $e');
+    if (e is StorageException) {
+      print('Storage error: $e');
+    } else {
+      print('Unexpected error: $e');
+    }
   }
 
   try {
     // Try to put invalid data
-    await db.put('invalid-key', Object());
+    print('\n2. Putting invalid data:');
+    final invalidData = <String, dynamic>{
+      'id': 'invalid',
+      'name': 'Invalid User',
+      // Missing required fields: email, isActive, lastLogin
+    };
+    print('Attempting to store invalid data: $invalidData');
+    await db.put<User>('invalid-key', invalidData as User); // Force type error
   } catch (e) {
-    print('Expected error for invalid data: $e');
+    print('Caught error: ${e.runtimeType}');
+    if (e is TypeException) {
+      print('Type error: $e');
+    } else if (e is ValidationException) {
+      print('Validation error: $e');
+    } else if (e is StorageException) {
+      print('Storage error: $e');
+    } else {
+      print('Unexpected error: $e');
+    }
   }
 
   try {
     // Try to use an invalid query
+    print('\n3. Using invalid query:');
     final queryEngine = QueryEngine(db.storage);
     await queryEngine.query<User>(
-      Query<User>()
-          .where((user) => user.email.length > 100), // Invalid but type-safe
+      Query<User>().where((user) => throw Exception('Invalid predicate')),
     );
   } catch (e) {
-    print('Expected error for invalid query: $e');
+    if (e is QueryException) {
+      print('Query error: $e');
+    } else {
+      print('Unexpected error: $e');
+    }
+  }
+
+  try {
+    // Try to put empty key
+    print('\n4. Putting empty key:');
+    await db.put(
+        '',
+        User(
+          id: '1',
+          name: 'Test User',
+          email: 'test@example.com',
+          isActive: true,
+          lastLogin: DateTime.now(),
+        ));
+  } catch (e) {
+    if (e is ArgumentError) {
+      print('Argument error: $e');
+    } else {
+      print('Unexpected error: $e');
+    }
+  }
+
+  try {
+    // Try to put null value
+    print('\n5. Putting null value:');
+    await db.put('test-key', null);
+  } catch (e) {
+    if (e is ArgumentError) {
+      print('Argument error: $e');
+    } else {
+      print('Unexpected error: $e');
+    }
   }
 }
 
 Future<void> _demonstrateReactiveQueries(QueryEngine queryEngine) async {
-  // Set up reactive queries
-  final activeUsersStream = queryEngine.watch<User, User>(
-    Query<User>().where((user) => user.isActive),
+  // Add debouncing to prevent duplicate events
+  final activeUsersStream = queryEngine
+      .watch<User, User>(
+        Query<User>().where((user) => user.isActive),
+      )
+      .distinct(); // Add distinct() to prevent duplicate events
+
+  // Add proper error handling and logging
+  final subscription1 = activeUsersStream.listen(
+    (user) => print('Active user updated: ${user.name}'),
+    onError: (error) => print('Error in active users stream: $error'),
+    onDone: () => print('Stream completed'),
   );
 
   final userStatsStream = queryEngine.watch<User, Map<String, dynamic>>(
@@ -187,11 +258,6 @@ Future<void> _demonstrateReactiveQueries(QueryEngine queryEngine) async {
   );
 
   // Listen to streams
-  final subscription1 = activeUsersStream.listen(
-    (user) => print('Active user updated: ${user.name}'),
-    onError: (error) => print('Error in active users stream: $error'),
-  );
-
   final subscription2 = userStatsStream.listen(
     (stats) => print('User stats updated: $stats'),
     onError: (error) => print('Error in stats stream: $error'),
@@ -240,39 +306,45 @@ Future<void> _storeTestData(LSMStorage storage) async {
 }
 
 Future<void> _demonstrateBatchOperations(QuantaDB db) async {
-  // Create a batch of users
-  final users = {
-    'user:batch:1': User(
-      id: 'batch:1',
-      name: 'Batch User 1',
-      email: 'batch1@example.com',
-      isActive: true,
-      lastLogin: DateTime.now(),
-    ),
-    'user:batch:2': User(
-      id: 'batch:2',
-      name: 'Batch User 2',
-      email: 'batch2@example.com',
-      isActive: true,
-      lastLogin: DateTime.now().subtract(const Duration(minutes: 5)),
-    ),
-    'user:batch:3': User(
-      id: 'batch:3',
-      name: 'Batch User 3',
-      email: 'batch3@example.com',
-      isActive: false,
-      lastLogin: DateTime.now().subtract(const Duration(minutes: 10)),
-    ),
-  };
+  try {
+    // Create a batch of users
+    final users = {
+      'user:batch:1': User(
+        id: 'batch:1',
+        name: 'Batch User 1',
+        email: 'batch1@example.com',
+        isActive: true,
+        lastLogin: DateTime.now(),
+      ),
+      'user:batch:2': User(
+        id: 'batch:2',
+        name: 'Batch User 2',
+        email: 'batch2@example.com',
+        isActive: true,
+        lastLogin: DateTime.now().subtract(const Duration(minutes: 5)),
+      ),
+      'user:batch:3': User(
+        id: 'batch:3',
+        name: 'Batch User 3',
+        email: 'batch3@example.com',
+        isActive: false,
+        lastLogin: DateTime.now().subtract(const Duration(minutes: 10)),
+      ),
+    };
 
-  // Store all users in a single batch operation
-  print('Storing ${users.length} users in batch...');
-  await db.storage.putAll(users);
-  print('Batch operation completed successfully');
+    // Store all users in a single batch operation
+    print('Storing ${users.length} users in batch...');
+    await db.storage.putAll(users);
+    print('Batch operation completed successfully');
 
-  // Verify the batch operation
-  for (final entry in users.entries) {
-    final retrievedUser = await db.get<User>(entry.key);
-    print('Retrieved user from batch: ${retrievedUser?.name}');
+    // Verify the batch operation
+    for (final entry in users.entries) {
+      final retrievedUser = await db.get<User>(entry.key);
+      print('Retrieved user from batch: ${retrievedUser?.name}');
+      print(
+          'Validation status: ${retrievedUser != null ? "Success" : "Failed"}');
+    }
+  } catch (e) {
+    print('Batch operation error: $e');
   }
 }

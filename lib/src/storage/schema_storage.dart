@@ -8,6 +8,8 @@ class SchemaStorage {
   static const _versionPrefix = 'version:';
   static const _migrationHistoryPrefix = 'migration:';
 
+  LSMStorage get storage => _storage;
+
   /// Get the current version of a model
   Future<int> getVersion(String modelName) async {
     final versionKey = '$_versionPrefix$modelName';

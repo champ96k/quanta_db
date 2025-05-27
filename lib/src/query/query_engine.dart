@@ -25,13 +25,13 @@ class Query<T> {
 
   void _validateQuery() {
     if (limit != null && limit! < 0) {
-      throw ArgumentError('Limit must be non-negative');
+      throw QueryException('Limit must be non-negative');
     }
     if (offset != null && offset! < 0) {
-      throw ArgumentError('Offset must be non-negative');
+      throw QueryException('Offset must be non-negative');
     }
     if (limit != null && offset != null && limit! + offset! < 0) {
-      throw ArgumentError('Limit + offset must be non-negative');
+      throw QueryException('Limit + offset must be non-negative');
     }
   }
 
@@ -151,15 +151,22 @@ class QueryEngine {
   /// Watch for changes matching a query
   Stream<R> watch<T, R>(Query<T> query) {
     query._validateQuery();
+
+    // Create a stream with proper deduplication and error handling
     final stream = _changeController.stream
         .where((event) => event.type == T)
         .map((event) => event.value as T)
         .where((item) => _applyPredicates(item, query.predicates))
+        .distinct((a, b) => _areItemsEqual(a, b)) // Add custom equality check
         .transform(_createSortTransformer(query.sorts))
-        .transform(_createPaginationTransformer(query.limit, query.offset));
+        .transform(_createPaginationTransformer(query.limit, query.offset))
+        .handleError((error) {
+      print('Error in watch stream: $error');
+      throw QueryException('Failed to watch query: $error');
+    });
 
     if (query.aggregations.isNotEmpty) {
-      // For aggregations, collect items into a list
+      // For aggregations, collect items into a list with validation
       return stream
           .transform(StreamTransformer<T, List<T>>.fromHandlers(
             handleData: (data, sink) {
@@ -167,6 +174,7 @@ class QueryEngine {
             },
           ))
           .transform(_createAggregationTransformer<T>(query.aggregations))
+          .map((result) => _validateAggregationResult(result))
           .cast<R>();
     }
 
@@ -349,4 +357,46 @@ void _changePropagationWorker(List<dynamic> args) {
       }
     }
   });
+}
+
+bool _areItemsEqual<T>(T a, T b) {
+  if (a == null || b == null) return a == b;
+  if (a is Map && b is Map) {
+    return _areMapsEqual(a, b);
+  }
+  return a == b;
+}
+
+bool _areMapsEqual(Map a, Map b) {
+  if (a.length != b.length) return false;
+  return a.entries.every((entry) {
+    final value = b[entry.key];
+    if (value is Map && entry.value is Map) {
+      return _areMapsEqual(entry.value, value);
+    }
+    return entry.value == value;
+  });
+}
+
+dynamic _validateAggregationResult(dynamic result) {
+  if (result is Map) {
+    // Validate stats consistency
+    if (result.containsKey('total') && result.containsKey('active')) {
+      final total = result['total'] as int;
+      final active = result['active'] as int;
+      if (active > total) {
+        throw QueryException(
+            'Invalid stats: active users ($active) cannot be greater than total users ($total)');
+      }
+    }
+  }
+  return result;
+}
+
+/// Custom exceptions
+class QueryException implements Exception {
+  QueryException(this.message);
+  final String message;
+  @override
+  String toString() => 'QueryException: $message';
 }

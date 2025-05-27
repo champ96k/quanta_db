@@ -3,10 +3,13 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:quanta_db/src/migration/migration_generator.dart';
 import 'package:quanta_db/src/storage/schema_storage.dart';
+import 'package:quanta_db/src/schema/schema_version_manager.dart';
 
 class MigrationBuilder implements Builder {
-  MigrationBuilder(this._schemaStorage);
+  MigrationBuilder(this._schemaStorage)
+      : _versionManager = SchemaVersionManager(_schemaStorage.storage);
   final SchemaStorage _schemaStorage;
+  final SchemaVersionManager _versionManager;
 
   @override
   final buildExtensions = const {
@@ -23,17 +26,14 @@ class MigrationBuilder implements Builder {
 
     // For each model, generate migration if needed
     for (final model in models) {
-      final currentVersion = await _getCurrentVersion(model);
       final currentSchema = await _getCurrentSchema(model);
       final newSchema = _generateSchemaFromModel(model);
 
       // Only generate migration if schema has changed
       if (hasSchemaChanged(currentSchema, newSchema)) {
-        final generator = MigrationGenerator();
+        final generator = MigrationGenerator(_versionManager);
         await generator.generateMigration(
           model.name,
-          currentVersion,
-          currentVersion + 1,
           currentSchema,
           newSchema,
         );
@@ -46,10 +46,6 @@ class MigrationBuilder implements Builder {
         .whereType<ClassElement>()
         .where((c) => c.metadata.any((m) => m.element?.name == 'QuantaEntity'))
         .toList();
-  }
-
-  Future<int> _getCurrentVersion(ClassElement model) async {
-    return await _schemaStorage.getVersion(model.name);
   }
 
   Future<Map<String, dynamic>> _getCurrentSchema(ClassElement model) async {
@@ -141,10 +137,10 @@ class MigrationBuilder implements Builder {
     for (final newIndex in newIndexes) {
       final oldIndex = oldIndexes.firstWhere(
         (i) => i['name'] == newIndex['name'],
-        orElse: () => null,
+        orElse: () => <String, Object>{},
       );
 
-      if (oldIndex == null) return true;
+      if (oldIndex.isEmpty) return true;
       if (oldIndex['unique'] != newIndex['unique']) return true;
       if (!_areListsEqual(oldIndex['fields'], newIndex['fields'])) return true;
     }
