@@ -59,7 +59,7 @@ Adding QuantaDB to your project is straightforward:
 
 ```yaml
 dependencies:
-  quanta_db: ^0.0.2
+  quanta_db: ^0.0.4
 ```
 
 Basic usage example:

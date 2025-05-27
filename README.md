@@ -111,7 +111,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  quanta_db: ^0.0.3
+  quanta_db: ^0.0.4
 ```
 
 2. **Install it**
@@ -169,6 +169,59 @@ void main() async {
 - QuantaDB is a **NoSQL** database, using a key-value store model based on LSM-Trees.
 - Data is stored using a custom binary serialization format (DartBson).
 - Directory management is handled automatically for different platforms, ensuring secure storage locations.
+
+## Features in Detail
+
+### Automatic Schema Migrations
+
+QuantaDB automatically handles schema changes:
+
+```dart
+@QuantaEntity()
+class User {
+  final String id;
+  final String name;
+  final String email;
+  // Add new fields as needed
+  final String? phone; // New field
+}
+```
+
+The migration will be generated automatically when you run:
+
+```bash
+dart run build_runner build
+```
+
+### Encryption
+
+Secure sensitive data with field-level encryption:
+
+```dart
+@QuantaEntity()
+class User {
+  @QuantaEncrypted()
+  final String password;
+}
+```
+
+### Reactive Fields
+
+Get real-time updates for specific fields:
+
+```dart
+@QuantaEntity()
+class User {
+  @QuantaReactive()
+  final DateTime lastLogin;
+}
+
+// Watch for changes
+final stream = userDao.watchLastLogin(user);
+await for (final lastLogin in stream) {
+  print('User logged in at: $lastLogin');
+}
+```
 
 ## Contributing
 

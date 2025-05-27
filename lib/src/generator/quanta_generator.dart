@@ -5,6 +5,20 @@ import 'package:build/build.dart';
 import 'package:quanta_db/quanta_db.dart';
 import 'package:source_gen/source_gen.dart';
 
+/// A code generator that creates type adapters and data access objects (DAOs) for QuantaDB entities.
+///
+/// This generator is used to automatically generate code for classes annotated with [QuantaEntity].
+/// It creates:
+/// - Type adapters for serialization and validation
+/// - Data access objects (DAOs) for database operations
+/// - Support for indexing and reactive fields
+///
+/// The generated code handles:
+/// - JSON serialization/deserialization
+/// - Field validation
+/// - Index management
+/// - Reactive field updates
+/// - Schema versioning
 class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
   @override
   FutureOr<String> generateForAnnotatedElement(

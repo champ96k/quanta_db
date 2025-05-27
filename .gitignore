@@ -27,5 +27,6 @@ migrate_working_dir/
 .dart_tool/
 build/
 
-# Local Netlify folder
-.netlify
+# Netlify
+documentation/.netlify/netlify.toml
+documentation/.netlify/state.json
