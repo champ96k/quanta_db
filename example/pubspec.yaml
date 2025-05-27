@@ -41,8 +41,7 @@ dependencies:
 
   path_provider: ^2.1.2
 
-  quanta_db:
-    path: ./../
+  quanta_db: ^0.0.4
 
   sqflite: ^2.3.2+1
   uuid: ^4.3.3

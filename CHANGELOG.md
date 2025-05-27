@@ -1,8 +1,25 @@
 # Changelog
 
-## 0.0.2
+## 0.0.5
 
-- Documentation updated
+### Features
+
+- Added comprehensive documentation for all public APIs
+- Improved error handling and validation
+- Enhanced schema versioning system
+- Added support for batch operations
+- Improved query engine performance
+
+### Dependencies
+
+- Updated all dependencies to their latest stable versions
+- Improved compatibility with Flutter 3.x
+
+### Bug Fixes
+
+- Fixed documentation coverage issues
+- Resolved dependency conflicts
+- Improved error messages and validation
 
 ## 0.0.4
 

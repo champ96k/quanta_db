@@ -25,4 +25,18 @@ build/
 
 # Documentation related
 # Exclude Netlify state files but keep the configuration
-documentation/.netlify/state.json 
+documentation/.netlify/state.json
+documentation/.netlify/netlify.toml
+
+# Sample examples
+sample_examples/
+sample/
+sample/*
+documentation/.netlify/
+documentation/.netlify/*
+
+# Explicitly ignore all files and folders under sample/ and documentation/.netlify/
+sample/
+sample/*
+documentation/.netlify/
+documentation/.netlify/* 
