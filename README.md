@@ -276,6 +276,30 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Tushar Nikam** - [LinkedIn](https://www.linkedin.com/in/tushar-nikam-dev/)
 
+## Contributors
+
+### Code Contributors
+<a href="https://github.com/champ96k/quanta_db/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=champ96k/quanta_db" />
+</a>
+
+### Issue Contributors
+<a href="https://github.com/champ96k/quanta_db/issues">
+  <img src="https://img.shields.io/github/issues/champ96k/quanta_db" alt="Total Issues" />
+</a>
+
+<a href="https://github.com/champ96k/quanta_db/issues?q=is%3Aissue+is%3Aclosed">
+  <img src="https://img.shields.io/github/issues-closed/champ96k/quanta_db" alt="Closed Issues" />
+</a>
+
+<a href="https://github.com/champ96k/quanta_db/issues?q=is%3Aissue+is%3Aopen">
+  <img src="https://img.shields.io/github/issues-open/champ96k/quanta_db" alt="Open Issues" />
+</a>
+
+<br>
+
+> View all contributors and their issues on our [GitHub Issues page](https://github.com/champ96k/quanta_db/issues)
+
 ---
 
 Made with ❤️ by the QuantaDB Team
