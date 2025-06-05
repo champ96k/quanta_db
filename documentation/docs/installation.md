@@ -128,6 +128,6 @@ If you encounter any issues:
 
 ## Next Steps
 
-- Read the [Getting Started](getting-started) guide
+- Read the [Getting Started Guide](intro)
 - Check out the [Examples](https://github.com/champ96k/quanta_db/tree/master/example) directory
 - Review the [API Reference](https://quantadb.netlify.app/)

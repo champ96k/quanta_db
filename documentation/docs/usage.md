@@ -6,7 +6,7 @@ sidebar_position: 3
 
 This section covers the basic usage of QuantaDB, from simple key-value operations to advanced features.
 
-For more detailed information about specific features, check out our [Features](features) section.
+For more detailed information about specific features, check out our [Features Overview](features/overview).
 
 ## Basic Operations
 
@@ -206,7 +206,7 @@ subscription.cancel();
 
 ## Next Steps
 
-- Read about [Advanced Features](features/)
-- Check out [Code Examples](../code_examples)
-- Review [Performance Tips](features/high-performance.md)
-- Learn about [Data Security](features/data-security.md) 
+- Read about [Advanced Features](features/overview)
+- Check out [Code Examples](https://github.com/champ96k/quanta_db/tree/master/example)
+- Review [Performance Tips](features/performance)
+- Learn about [Data Security](features/security) 
