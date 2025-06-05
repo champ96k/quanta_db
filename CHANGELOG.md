@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.0.6
+
+### Features
+
+- Improved ID generation system with timestamp-based approach
+- Enhanced documentation with dynamic issue tracking
+- Added comprehensive examples for all features
+- Improved type safety in query engine
+- Added support for reactive queries with QueryEngine
+
+### Documentation
+
+- Updated all documentation to remove DAO references
+- Added new examples for direct database operations
+- Improved code snippets and usage instructions
+- Added dynamic issue tracking badges in README
+- Enhanced type safety documentation
+
+### Bug Fixes
+
+- Fixed ID generation issues with Random dependency
+- Resolved type casting errors in examples
+- Fixed documentation inconsistencies
+- Improved error handling in query operations
+
+### Dependencies
+
+- Updated Flutter SDK requirement to >=1.17.0
+- Updated Dart SDK requirement to >=3.4.3
+- Updated all dependencies to their latest stable versions
+
 ## 0.0.5
 
 ### Features

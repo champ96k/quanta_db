@@ -10,10 +10,11 @@ To start using QuantaDB, add the dependency to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  quanta_db: ^0.0.5 # Use the latest version
+  quanta_db: ^0.0.6 # Use the latest version
 ```
 
 Then, run:
+
 ```bash
 # For Dart projects
 dart pub get
@@ -53,7 +54,7 @@ targets:
         options:
           # Enable debug logging
           debug: false
-          
+
           # Custom output directory (optional)
           output_dir: lib/generated
 ```
@@ -109,11 +110,13 @@ void main() async {
 If you encounter any issues:
 
 1. **Version Conflicts**
+
    - Check for compatible versions of dependencies
    - Update to the latest version of QuantaDB
    - Clear pub cache: `dart pub cache clean`
 
 2. **Code Generation Issues**
+
    - Delete the `build` directory
    - Run `dart pub get` again
    - Restart the code generator
@@ -125,6 +128,6 @@ If you encounter any issues:
 
 ## Next Steps
 
-- Read the [Getting Started](intro.md) guide
-- Check out the [Examples](../code_examples) directory
+- Read the [Getting Started](getting-started) guide
+- Check out the [Examples](https://github.com/champ96k/quanta_db/tree/master/example) directory
 - Review the [API Reference](https://quantadb.netlify.app/)

@@ -37,7 +37,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  quanta_db: ^0.0.5
+  quanta_db: ^0.0.6
 ```
 
 You can install packages from the command line:

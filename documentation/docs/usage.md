@@ -6,6 +6,8 @@ sidebar_position: 3
 
 This section covers the basic usage of QuantaDB, from simple key-value operations to advanced features.
 
+For more detailed information about specific features, check out our [Features](features) section.
+
 ## Basic Operations
 
 ### Opening a Database

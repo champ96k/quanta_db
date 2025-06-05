@@ -59,7 +59,7 @@ To start using QuantaDB, add the dependency to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  quanta_db: ^0.0.5 # Use the latest version
+  quanta_db: ^0.0.6 # Use the latest version
 ```
 
 Then, run `dart pub get` or `flutter pub get`.
@@ -78,13 +78,13 @@ void main() async {
   class User {
     @QuantaId()
     final String id;
-    
+
     @QuantaField(required: true)
     final String name;
-    
+
     @QuantaIndex()
     final String email;
-    
+
     User({required this.id, required this.name, required this.email});
   }
 

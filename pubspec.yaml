@@ -1,6 +1,6 @@
 name: quanta_db
 description: "A high-performance pure Dart database implementation using LSM-Tree architecture."
-version: 0.0.5
+version: 0.0.6
 homepage: https://github.com/champ96k/quanta_db
 repository: https://github.com/champ96k/quanta_db
 topics:
