@@ -92,7 +92,7 @@ class User {
 // Type-safe operations
 void main() async {
   final db = await QuantaDB.open('my_database');
-  final userDao = UserDao(db);
+  final queryEngine = QueryEngine(db.storage);
   
   // Create user with auto-generated ID
   final user = User(
@@ -101,8 +101,14 @@ void main() async {
     age: 30
   );
   
-  await userDao.insert(user);
+  await db.put('user:1', user);
   print('Created user with ID: ${user.id}');
+  
+  // Query users
+  final users = await queryEngine.query<User>(
+    Query<User>().where((user) => user.age > 25)
+  );
+  print('Found ${users.length} users over 25');
 }
 ```
 

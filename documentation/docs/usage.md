@@ -77,12 +77,9 @@ class User {
 }
 ```
 
-### Using the Generated DAO
+### Using Models with QuantaDB
 
 ```dart
-// Get the DAO
-final userDao = UserDao(db);
-
 // Create a user
 final user = User(
   id: '1',
@@ -92,26 +89,28 @@ final user = User(
 );
 
 // Insert the user
-await userDao.insert(user);
+await db.put('user:1', user);
 
 // Find by ID
-final found = await userDao.findById('1');
-
-// Find by email (using index)
-final byEmail = await userDao.findByEmail('john@example.com');
+final found = await db.get<User>('user:1');
 
 // Update user
-user.name = 'John Updated';
-await userDao.update(user);
+final updatedUser = User(
+  id: '1',
+  name: 'John Updated',
+  email: 'john@example.com',
+  age: 31
+);
+await db.put('user:1', updatedUser);
 
 // Delete user
-await userDao.delete('1');
+await db.delete('user:1');
 ```
 
 ## Transactions
 
 ```dart
-await db.transaction(() async {
+await db.storage.transaction((txn) async {
   // Create user
   final user = User(
     id: '1',
@@ -119,41 +118,51 @@ await db.transaction(() async {
     email: 'john@example.com',
     age: 30
   );
-  await userDao.insert(user);
+  await txn.put('user:1', user);
   
   // Create profile
   final profile = Profile(
     userId: user.id,
     bio: 'Software Developer'
   );
-  await profileDao.insert(profile);
+  await txn.put('profile:1', profile);
 });
 ```
 
 ## Queries
 
 ```dart
+// Create a query engine
+final queryEngine = QueryEngine(db.storage);
+
 // Find all users
-final allUsers = await userDao.getAll();
+final allUsers = await queryEngine.query<User>(
+  Query<User>()
+);
 
 // Find users by age
-final youngUsers = await userDao.findByAge(30);
+final youngUsers = await queryEngine.query<User>(
+  Query<User>().where((user) => user.age < 30)
+);
 
 // Complex query
-final results = await userDao.query()
-  .where('age').greaterThan(18)
-  .and('name').startsWith('J')
-  .orderBy('age', descending: true)
-  .limit(10)
-  .execute();
+final results = await queryEngine.query<User>(
+  Query<User>()
+    .where((user) => user.age > 18)
+    .where((user) => user.name.startsWith('J'))
+    .sortBy((user) => user.age)
+    .take(10)
+);
 ```
 
 ## Real-time Updates
 
 ```dart
 // Subscribe to changes
-final subscription = userDao.watch().listen((event) {
-  print('User changed: ${event.data}');
+final subscription = queryEngine.watch<User, User>(
+  Query<User>().where((user) => user.isActive)
+).listen((user) {
+  print('User changed: ${user.name}');
 });
 
 // Later, unsubscribe
@@ -179,7 +188,7 @@ subscription.cancel();
 
 4. **Code Organization**
    - Keep models in separate files
-   - Use DAOs for data access
+   - Use proper key naming conventions
    - Implement proper separation of concerns
 
 ## Tips

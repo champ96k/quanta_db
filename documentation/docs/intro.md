@@ -88,15 +88,15 @@ void main() async {
     User({required this.id, required this.name, required this.email});
   }
 
-  // Create a DAO
-  final userDao = UserDao(db);
-
   // Insert data
   final user = User(id: '1', name: 'John', email: 'john@example.com');
-  await userDao.insert(user);
+  await db.put('user:1', user);
 
   // Query data
-  final users = await userDao.getAll();
+  final queryEngine = QueryEngine(db.storage);
+  final users = await queryEngine.query<User>(
+    Query<User>().where((user) => user.name.startsWith('J'))
+  );
   print('Users: $users');
 
   // Close the database
