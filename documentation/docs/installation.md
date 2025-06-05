@@ -4,8 +4,6 @@ sidebar_position: 2
 
 # Installation
 
-## Adding the Dependency
-
 To start using QuantaDB, add the dependency to your `pubspec.yaml` file:
 
 ```yaml
@@ -37,27 +35,10 @@ QuantaDB works on all platforms supported by Dart/Flutter:
 
 - ✅ Android
 - ✅ iOS
-- ✅ macOS
-- ✅ Windows
-- ✅ Linux
-- ✅ Web (with IndexedDB adapter)
-
-## Build Configuration
-
-Add the following to your `build.yaml` file to configure code generation:
-
-```yaml
-targets:
-  $default:
-    builders:
-      quanta_db:
-        options:
-          # Enable debug logging
-          debug: false
-
-          # Custom output directory (optional)
-          output_dir: lib/generated
-```
+- 🏗️ macOS
+- 🏗️ Windows
+- 🏗️ Linux
+- 🏗️ Web (with IndexedDB adapter)
 
 ## Development Dependencies
 
@@ -66,7 +47,6 @@ For development, you might want to add these optional dependencies:
 ```yaml
 dev_dependencies:
   build_runner: ^2.4.0
-  quanta_db_generator: ^0.0.5
 ```
 
 ## Code Generation
