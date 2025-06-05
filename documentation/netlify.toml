@@ -1,0 +1,17 @@
+[build]
+  base = "documentation"
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.processing]
+  skip_processing = false
+  [build.processing.html]
+    pretty_urls = true 
