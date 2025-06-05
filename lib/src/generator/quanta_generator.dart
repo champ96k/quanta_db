@@ -1,6 +1,9 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:build/build.dart';
 import 'package:quanta_db/quanta_db.dart';
 import 'package:source_gen/source_gen.dart';
@@ -28,10 +31,137 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
   ) async {
     if (element is! ClassElement) return '';
     final className = element.name;
-    final fields = element.fields.where((f) => !f.isStatic).toList();
+
+    // Get all fields including inherited ones
+    final fields =
+        element.fields.where((f) => !f.isStatic && !f.isPrivate).toList();
 
     // Get schema version from annotation
-    final schemaVersion = annotation.read('version').intValue;
+    final schemaVersion = annotation.read('version').isNull
+        ? 1
+        : annotation.read('version').intValue;
+
+    final buffer = StringBuffer();
+    buffer.writeln(
+        '// **************************************************************************');
+    buffer.writeln('// QuantaGenerator');
+    buffer.writeln(
+        '// **************************************************************************');
+    buffer.writeln();
+
+    // Extension for JSON serialization/deserialization and toString
+    buffer.writeln('extension ${className}JsonExtension on $className {');
+
+    // fromJson static method
+    buffer.writeln('  static $className fromJson(Map<String, dynamic> json) {');
+    buffer.writeln('    return $className(');
+    for (final field in fields) {
+      final fieldName = field.name;
+      final fieldType = field.type.getDisplayString(withNullability: false);
+      final isEnum = field.type.element?.kind == ElementKind.ENUM;
+      final isList = fieldType.startsWith('List<');
+
+      if (isList) {
+        final innerType = fieldType.substring(5, fieldType.length - 1);
+        if (innerType == 'String') {
+          buffer.writeln(
+              "      $fieldName: (json['$fieldName'] as List).map((e) => e as String).toList(),");
+        } else if (innerType == 'int') {
+          buffer.writeln(
+              "      $fieldName: (json['$fieldName'] as List).map((e) => e as int).toList(),");
+        } else if (innerType == 'double') {
+          buffer.writeln(
+              "      $fieldName: (json['$fieldName'] as List).map((e) => (e as num).toDouble()).toList(),");
+        } else if (innerType == 'bool') {
+          buffer.writeln(
+              "      $fieldName: (json['$fieldName'] as List).map((e) => e as bool).toList(),");
+        } else if (innerType == 'DateTime') {
+          buffer.writeln(
+              "      $fieldName: (json['$fieldName'] as List).map((e) => DateTime.parse(e as String)).toList(),");
+        } else if (innerType.endsWith('Enum')) {
+          buffer.writeln(
+              "      $fieldName: (json['$fieldName'] as List).map((e) => $innerType.values.firstWhere((v) => v.name == e)).toList(),");
+        } else {
+          buffer.writeln(
+              "      $fieldName: (json['$fieldName'] as List).map((e) => ${innerType}JsonExtension.fromJson(e as Map<String, dynamic>)).toList(),");
+        }
+      } else if (fieldType == 'DateTime') {
+        buffer.writeln(
+            "      $fieldName: DateTime.parse(json['$fieldName'] as String),");
+      } else if (fieldType == 'int') {
+        buffer.writeln("      $fieldName: json['$fieldName'] as int,");
+      } else if (fieldType == 'double') {
+        buffer.writeln(
+            "      $fieldName: (json['$fieldName'] as num).toDouble(),");
+      } else if (fieldType == 'num') {
+        buffer.writeln("      $fieldName: json['$fieldName'] as num,");
+      } else if (fieldType == 'bool') {
+        buffer.writeln("      $fieldName: json['$fieldName'] as bool,");
+      } else if (fieldType == 'String') {
+        buffer.writeln("      $fieldName: json['$fieldName'] as String,");
+      } else if (isEnum) {
+        buffer.writeln(
+            "      $fieldName: $fieldType.values.firstWhere((e) => e.name == json['$fieldName']),");
+      } else {
+        // Assume custom type with fromJson
+        buffer.writeln(
+            "      $fieldName: ${fieldType}JsonExtension.fromJson(json['$fieldName'] as Map<String, dynamic>),");
+      }
+    }
+    buffer.writeln('    );');
+    buffer.writeln('  }');
+
+    // toJson instance method
+    buffer.writeln('  Map<String, dynamic> toJson() {');
+    buffer.writeln('    return {');
+    for (final field in fields) {
+      final fieldName = field.name;
+      final fieldType = field.type.getDisplayString(withNullability: false);
+      final isEnum = field.type.element?.kind == ElementKind.ENUM;
+      final isList = fieldType.startsWith('List<');
+
+      if (isList) {
+        final innerType = fieldType.substring(5, fieldType.length - 1);
+        if (innerType == 'DateTime') {
+          buffer.writeln(
+              "      '$fieldName': $fieldName.map((e) => e.toIso8601String()).toList(),");
+        } else if (innerType.endsWith('Enum')) {
+          buffer.writeln(
+              "      '$fieldName': $fieldName.map((e) => e.name).toList(),");
+        } else if (['String', 'int', 'double', 'num', 'bool']
+            .contains(innerType)) {
+          buffer.writeln("      '$fieldName': $fieldName,");
+        } else {
+          buffer.writeln(
+              "      '$fieldName': $fieldName.map((e) => e.toJson()).toList(),");
+        }
+      } else if (fieldType == 'DateTime') {
+        buffer.writeln("      '$fieldName': $fieldName.toIso8601String(),");
+      } else if (isEnum) {
+        buffer.writeln(
+            "      '$fieldName': $fieldName${field.type.nullabilitySuffix == NullabilitySuffix.question ? '?.name' : '.name'},");
+      } else if (['int', 'double', 'num', 'bool', 'String']
+          .contains(fieldType)) {
+        buffer.writeln("      '$fieldName': $fieldName,");
+      } else {
+        // Assume custom type with toJson
+        buffer.writeln("      '$fieldName': $fieldName.toJson(),");
+      }
+    }
+    buffer.writeln('    };');
+    buffer.writeln('  }');
+
+    // toDebugString method
+    buffer.writeln('  String toDebugString() {');
+    buffer.writeln('    final fields = [');
+    for (final field in fields) {
+      buffer.writeln("      '${field.name}: \$${field.name}',");
+    }
+    buffer.writeln('    ].join(", ");');
+    buffer.writeln('    return "$className(\$fields)";');
+    buffer.writeln('  }');
+
+    buffer.writeln('}');
 
     // Type Adapter with encryption and ignore support
     final adapterBuffer = StringBuffer();
@@ -43,8 +173,6 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
         '// **************************************************************************');
     adapterBuffer.writeln('');
     adapterBuffer.writeln('class ${className}Adapter {');
-
-    // Schema version
     adapterBuffer.writeln('  static const int schemaVersion = $schemaVersion;');
 
     // Validation method
@@ -60,9 +188,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
       final fieldType = field.type.getDisplayString(withNullability: false);
       final annotations = _formatAnnotations(field.metadata);
 
-      if (annotations.isEmpty) {
-        continue;
-      }
+      if (annotations.isEmpty) continue;
 
       if (fieldType == 'String') {
         adapterBuffer.writeln('''
@@ -103,36 +229,22 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
 ''');
 
     // toJson method
-    adapterBuffer.writeln(
-        '  static Future<Map<String, dynamic>> toJson($className instance) async {');
     adapterBuffer.writeln('''
+  static Future<Map<String, dynamic>> toJson($className instance) async {
     final validationError = validate(instance);
     if (validationError != null) {
       throw ValidationException(validationError);
     }
+    return instance.toJson();
+  }
 ''');
-    adapterBuffer.writeln('    return {');
-    for (final field in fields) {
-      if (_hasAnnotation(field, 'QuantaIgnore')) continue;
-
-      final fieldName = field.name;
-      adapterBuffer.writeln('      \'$fieldName\': instance.$fieldName,');
-    }
-    adapterBuffer.writeln('    };');
-    adapterBuffer.writeln('  }');
 
     // fromJson method
-    adapterBuffer.writeln(
-        '  static Future<$className> fromJson(Map<String, dynamic> json) async => $className(');
-    for (final field in fields) {
-      if (_hasAnnotation(field, 'QuantaIgnore')) continue;
-
-      final fieldName = field.name;
-      final fieldType = field.type.getDisplayString(withNullability: false);
-      adapterBuffer
-          .writeln('    $fieldName: json[\'$fieldName\'] as $fieldType,');
-    }
-    adapterBuffer.writeln('  );');
+    adapterBuffer.writeln('''
+  static Future<$className> fromJson(Map<String, dynamic> json) async {
+    return ${className}JsonExtension.fromJson(json);
+  }
+''');
 
     adapterBuffer.writeln('}');
 
@@ -141,14 +253,9 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
     daoBuffer.writeln('class ${className}Dao {');
     daoBuffer.writeln('  final QuantaDB _db;');
     daoBuffer.writeln('  ${className}Dao(this._db);');
-
-    // Schema version getter
     daoBuffer.writeln('''
   int get schemaVersion => ${className}Adapter.schemaVersion;
-''');
 
-    // CRUD methods
-    daoBuffer.writeln('''
   Future<void> insert($className instance) async {
     final json = await ${className}Adapter.toJson(instance);
     await _db.put(instance.id, json);
@@ -203,8 +310,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
         final fieldType = field.type.getDisplayString(withNullability: false);
         daoBuffer.writeln('''
   Stream<$fieldType> watch${_capitalize(fieldName)}($className instance) async* {
-    final stream = _db.onChange.where((event) => 
-      event.key == '\${instance.id}');
+    final stream = _db.onChange.where((event) => event.key == '\${instance.id}');
     await for (final event in stream) {
       if (event.value != null) {
         final updated = await ${className}Adapter.fromJson(event.value as Map<String, dynamic>);
@@ -219,6 +325,7 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
     daoBuffer.writeln('}');
 
     return [
+      buffer.toString(),
       adapterBuffer.toString(),
       daoBuffer.toString(),
     ].join('\n\n');

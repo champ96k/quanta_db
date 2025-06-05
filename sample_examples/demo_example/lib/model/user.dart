@@ -1,23 +1,18 @@
 import 'package:quanta_db/quanta_db.dart';
 
-part 'user.g.dart';
+part 'user.quanta.g.dart';
 
-@QuantaEntity()
-class User implements Serializable {
+@QuantaEntity(version: 1)
+class User {
   User({
     required this.id,
     required this.name,
     required this.email,
     required this.isActive,
     required this.lastLogin,
+    this.userType,
+    this.roles = const [],
   });
-
-  User.fromJson(Map<String, dynamic> json)
-      : id = json['id'] as String,
-        name = json['name'] as String,
-        email = json['email'] as String,
-        isActive = json['isActive'] as bool,
-        lastLogin = DateTime.parse(json['lastLogin'] as String);
 
   @QuantaId()
   final String id;
@@ -39,19 +34,11 @@ class User implements Serializable {
   @QuantaReactive()
   final DateTime lastLogin;
 
-  @override
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'email': email,
-      'isActive': isActive,
-      'lastLogin': lastLogin.toIso8601String(),
-    };
-  }
+  final UserType? userType;
+  final List<String> roles;
+}
 
-  @override
-  String toString() {
-    return 'User(id: $id, name: $name, email: $email, isActive: $isActive, lastLogin: $lastLogin)';
-  }
+enum UserType {
+  admin,
+  user,
 }

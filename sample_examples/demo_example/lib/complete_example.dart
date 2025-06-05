@@ -58,9 +58,11 @@ Future<void> _demonstrateCRUD(QuantaDB db) async {
   await db.put('user:1', user);
   print('Created user: $user');
 
+  print('Created toDebugString: ${user.toDebugString()}');
+
   // Read
   final retrievedUser = await db.get<User>('user:1');
-  print('Retrieved user: $retrievedUser');
+  print('Retrieved user: ${retrievedUser?.toDebugString()}');
 
   // Update
   final updatedUser = User(
@@ -71,12 +73,12 @@ Future<void> _demonstrateCRUD(QuantaDB db) async {
     lastLogin: DateTime.now(),
   );
   await db.put('user:1', updatedUser);
-  print('Updated user: $updatedUser');
+  print('Updated user: ${updatedUser.toDebugString()}');
 
   // Delete
   await db.delete('user:1');
   final deletedUser = await db.get<User>('user:1');
-  print('After deletion: $deletedUser');
+  print('After deletion: ${deletedUser?.toDebugString()}');
 }
 
 Future<void> _demonstrateQueries(QueryEngine queryEngine) async {

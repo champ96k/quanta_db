@@ -2,7 +2,7 @@ import 'package:quanta_db/annotations/quanta_annotations.dart';
 
 /// Validates field values based on annotations
 class FieldValidator {
-  FieldValidator();
+  FieldValidator._();
 
   /// Validates a field value against its annotations
   static String? validate(dynamic value, List<dynamic> annotations) {

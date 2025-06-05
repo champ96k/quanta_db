@@ -5,7 +5,7 @@ import 'src/generator/quanta_generator.dart';
 
 /// Creates a builder that generates code using the QuantaGenerator.
 ///
-/// This builder is used to generate `.g.dart` files containing the generated code
+/// This builder is used to generate `.quanta.g.dart` files containing the generated code
 /// from the QuantaGenerator. The generated code includes:
 /// - Type adapters for serialization
 /// - Data access objects (DAOs) for database operations
@@ -15,4 +15,4 @@ import 'src/generator/quanta_generator.dart';
 /// The builder is configured in `build.yaml` to run on all Dart files except
 /// those in the `lib/annotations` and `lib/src/generator` directories.
 Builder quantaBuilder(BuilderOptions options) =>
-    PartBuilder([QuantaGenerator()], '.g.dart');
+    PartBuilder([QuantaGenerator()], '.quanta.g.dart');
