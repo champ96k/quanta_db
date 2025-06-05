@@ -11,7 +11,7 @@
 
 📚 **Documentation**: Visit our [documentation site](https://quantadb.netlify.app/) for detailed guides and API references.
 
-A high-performance pure Dart local database implementation using LSM-Tree architecture. QuantaDB is designed to provide a fast, reliable, and easy-to-use data storage solution for both Flutter applications and pure Dart projects.
+A high-performance, type-safe NoSQL database for Dart and Flutter applications.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/champ96k/quanta_db/master/logo.png" alt="QuantaDB Logo" width="400"/>
@@ -19,14 +19,11 @@ A high-performance pure Dart local database implementation using LSM-Tree archit
 
 ## Features
 
-- 🚀 **High Performance**: LSM-Tree based storage engine optimized for speed
-- 🔒 **Data Security**: Built-in encryption support for sensitive data
-- 📊 **Advanced Indexing**: Support for single, composite, and unique indexes
-- 🔄 **Real-time Updates**: Reactive queries with change notifications
-- 🎯 **Type Safety**: Strong typing with code generation
-- 📱 **Cross-Platform**: Works on all platforms supported by Dart/Flutter
-- 🔍 **Query Engine**: Powerful query capabilities with filtering and sorting
-- 🔄 **Transaction Support**: ACID compliant transactions
+- 🚀 **Performance**: Optimized for speed with LSM-Tree storage
+- 🔒 **Type Safety**: Compile-time type checking and validation
+- 🔄 **Reactive**: Real-time data synchronization
+- 📊 **Query Engine**: Powerful querying capabilities
+- 🔄 **Transactions**: ACID-compliant transactions
 - 📈 **Scalability**: Efficient handling of large datasets
 - 🛠 **Developer Experience**: Annotation-driven code generation
 - 🔄 **Schema Migrations**: Automatic schema version management
@@ -73,15 +70,15 @@ void main() async {
     User({required this.id, required this.name, required this.email});
   }
 
-  // Create a DAO
-  final userDao = UserDao(db);
-
   // Insert data
   final user = User(id: '1', name: 'John', email: 'john@example.com');
-  await userDao.insert(user);
+  await db.put('user:1', user);
 
   // Query data
-  final users = await userDao.getAll();
+  final queryEngine = QueryEngine(db.storage);
+  final users = await queryEngine.query<User>(
+    Query<User>().where((user) => user.name.startsWith('J'))
+  );
   print('Users: $users');
 
   // Close the database
@@ -196,9 +193,12 @@ final String name;
 final DateTime lastLogin;
 
 // Watch for changes
-final stream = userDao.watchLastLogin(user);
-await for (final lastLogin in stream) {
-  print('User logged in at: $lastLogin');
+final queryEngine = QueryEngine(db.storage);
+final stream = queryEngine.watch<User, User>(
+  Query<User>().where((user) => user.lastLogin != null)
+);
+await for (final user in stream) {
+  print('User logged in at: ${user.lastLogin}');
 }
 ```
 

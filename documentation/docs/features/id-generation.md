@@ -97,7 +97,6 @@ This will generate IDs like: `usr_1647123456789`
 ```dart
 void main() async {
   final db = await QuantaDB.open('my_database');
-  final userDao = UserDao(db);
   
   // Create user with auto-generated ID
   final user = User(
@@ -106,7 +105,7 @@ void main() async {
     email: 'john@example.com'
   );
   
-  await userDao.insert(user);
+  await db.put('user:1', user);
   print('Created user with ID: ${user.id}');
   
   // Create user with manual ID
@@ -116,8 +115,15 @@ void main() async {
     email: 'jane@example.com'
   );
   
-  await userDao.insert(user2);
+  await db.put('user:2', user2);
   print('Created user with ID: ${user2.id}');
+  
+  // Query users
+  final queryEngine = QueryEngine(db.storage);
+  final users = await queryEngine.query<User>(
+    Query<User>()
+  );
+  print('Total users: ${users.length}');
 }
 ```
 
