@@ -2,13 +2,61 @@
 sidebar_position: 10
 ---
 
-:::caution Coming Soon
-This section is currently under development.
-:::
-
 # Type Safety
 
 QuantaDB emphasizes type safety, providing a robust development experience by allowing you to work with your data using strong types. This reduces the likelihood of runtime errors related to incorrect data types and improves code maintainability.
+
+## ID Generation
+
+QuantaDB supports both manual and automatic ID generation:
+
+### Manual ID Assignment
+
+```dart
+@QuantaEntity(version: 1)
+class User {
+  @QuantaId()
+  final String id;  // Manual ID assignment
+  
+  final String name;
+  final String email;
+}
+
+// Usage
+final user = User(
+  id: 'user_123',  // Manually assigned ID
+  name: 'John',
+  email: 'john@example.com'
+);
+```
+
+### Auto-Generated IDs
+
+```dart
+@QuantaEntity(version: 1)
+class User {
+  @QuantaId(autoGenerate: true)  // Enable auto-generation
+  final String id;
+  
+  final String name;
+  final String email;
+}
+
+// Usage
+final user = User(
+  id: '',  // Empty ID will be auto-generated
+  name: 'John',
+  email: 'john@example.com'
+);
+```
+
+Auto-generated IDs follow this format:
+- Prefix: Entity name in lowercase (e.g., 'user_')
+- Timestamp: Current milliseconds since epoch
+- Random: 4-digit random number
+Example: `user_16471234567891234`
+
+## Type Safety Features
 
 Type safety in QuantaDB is primarily achieved through **annotation-driven code generation**. You define your data models using Dart classes and annotate them with specific QuantaDB annotations. A build runner then automatically generates code that handles the serialization and deserialization of your objects to and from the database's storage format (DartBson).
 
@@ -16,50 +64,67 @@ This generated code ensures that when you read data from the database, it is cor
 
 This approach provides compile-time checks for your data models and database operations, giving you confidence in the type correctness of your code.
 
-Here's a simplified example illustrating the concept:
+## Example
 
 ```dart
-import 'package:quanta_db/quanta_db.dart'; // Assuming necessary imports
-import 'package:quanta_db/annotations.dart'; // Assuming annotations import
+import 'package:quanta_db/quanta_db.dart';
 
-part 'my_data_models.g.dart'; // Generated file
+part 'my_data_models.g.dart';
 
-// Define your data model using annotations
 @QuantaEntity()
 class User {
-  @QuantaKey()
+  @QuantaId(autoGenerate: true)
   final String id;
+  
+  @QuantaField(required: true)
   final String name;
+  
+  @QuantaField(required: true)
   final int age;
 
-  User({required this.id, required this.name, required this.age});
-
-  // Constructor for the generated code
-  factory User.fromQuanta(Map<String, dynamic> json) => _\$UserFromQuanta(json);
-
-  // Method for the generated code
-  Map<String, dynamic> toQuanta() => _\$UserToQuanta(this);
+  User({
+    required this.id,
+    required this.name,
+    required this.age,
+  });
 }
 
-// Example of using type-safe operations
-void exampleUsage(QuantaDB db) async {
-  final user = User(id: '123', name: 'Alice', age: 30);
-
-  // Type-safe put operation
-  await db.put<User>(user.id, user); // Use the User type argument
-
-  // Type-safe get operation
-  final retrievedUser = await db.get<User>(user.id); // Use the User type argument
-
-  if (retrievedUser != null) {
-    print('Retrieved user: ${retrievedUser.name}, Age: ${retrievedUser.age}');
-    // You can directly access properties with confidence in their types
-    int userAge = retrievedUser.age; // userAge is an int
-  }
+// Type-safe operations
+void main() async {
+  final db = await QuantaDB.open('my_database');
+  final userDao = UserDao(db);
+  
+  // Create user with auto-generated ID
+  final user = User(
+    id: '',  // Will be auto-generated
+    name: 'John',
+    age: 30
+  );
+  
+  await userDao.insert(user);
+  print('Created user with ID: ${user.id}');
 }
 ```
 
-This example demonstrates how defining a `User` class with annotations allows QuantaDB to handle the storage and retrieval in a type-safe manner. The generated code (`my_data_models.g.dart`) would contain the actual serialization and deserialization logic.
+## Benefits
 
-Refer to the dedicated Code Generation and Schema definition sections for detailed instructions on setting up code generation and defining your data models with annotations.
+1. **Compile-time Type Checking**
+   - Catch type errors before runtime
+   - IDE support with autocompletion
+   - Refactoring support
+
+2. **Runtime Type Safety**
+   - Automatic type conversion
+   - Null safety support
+   - Validation of required fields
+
+3. **Code Generation**
+   - Automatic serialization
+   - Type-safe queries
+   - Index management
+
+4. **ID Management**
+   - Flexible ID generation
+   - Unique ID guarantees
+   - Custom ID formats
  

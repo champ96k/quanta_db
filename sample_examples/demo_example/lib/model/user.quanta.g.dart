@@ -117,7 +117,16 @@ class UserDao {
 
   Future<void> insert(User instance) async {
     final json = await UserAdapter.toJson(instance);
-    await _db.put(instance.id, json);
+    String id = instance.id;
+
+    // Handle auto-generated IDs
+    if (id.isEmpty) {
+      final entityPrefix = 'user_';
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      id = entityPrefix + timestamp.toString();
+    }
+
+    await _db.put(id, json);
   }
 
   Future<User?> getById(String id) async {

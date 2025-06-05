@@ -1,6 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
 import 'dart:async';
+// ignore_for_file: unused_import
+import 'dart:math';
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
@@ -258,7 +260,16 @@ class QuantaGenerator extends GeneratorForAnnotation<QuantaEntity> {
 
   Future<void> insert($className instance) async {
     final json = await ${className}Adapter.toJson(instance);
-    await _db.put(instance.id, json);
+    String id = instance.id;
+    
+    // Handle auto-generated IDs
+    if (id.isEmpty) {
+      final entityPrefix = '${className.toLowerCase()}_';
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      id = entityPrefix + timestamp.toString();
+    }
+    
+    await _db.put(id, json);
   }
 
   Future<$className?> getById(String id) async {
