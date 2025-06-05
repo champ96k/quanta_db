@@ -1,21 +1,27 @@
+# QuantaDB
+
+[![Pub Version](https://img.shields.io/pub/v/quanta_db.svg)](https://pub.dev/packages/quanta_db)
+[![License](https://img.shields.io/github/license/champ96k/quanta_db)](https://github.com/champ96k/quanta_db/blob/master/LICENSE)
+[![Dart CI](https://github.com/champ96k/quanta_db/actions/workflows/dart.yml/badge.svg)](https://github.com/champ96k/quanta_db/actions/workflows/dart.yml)
+[![codecov](https://codecov.io/gh/champ96k/quanta_db/branch/master/graph/badge.svg)](https://codecov.io/gh/champ96k/quanta_db)
+[![Documentation](https://img.shields.io/badge/Documentation-API-blue)](https://quantadb.netlify.app/)
+
 > ⚠️ **BETA RELEASE**  
 > This project is currently in **beta**. While it's functional and available for use, it may still undergo changes. Please use with caution in production environments and report any bugs or issues.
 
-# QuantaDB: A High-Performance Pure Dart Local Database
+📚 **Documentation**: Visit our [documentation site](https://quantadb.netlify.app/) for detailed guides and API references.
+
+A high-performance pure Dart local database implementation using LSM-Tree architecture. QuantaDB is designed to provide a fast, reliable, and easy-to-use data storage solution for both Flutter applications and pure Dart projects.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/champ96k/quanta_db/master/logo.png" alt="QuantaDB Logo" width="400"/>
 </p>
 
-QuantaDB is a modern, high-performance **NoSQL** local database built entirely in Dart. It's designed to provide a fast, reliable, and easy-to-use data storage solution for both Flutter applications and pure Dart projects.
-
-📚 **Documentation**: Visit our [documentation site](https://quantadb.netlify.app/) for detailed guides and API references.
-
-## ✨ Features
+## Features
 
 - 🚀 **High Performance**: LSM-Tree based storage engine optimized for speed
 - 🔒 **Data Security**: Built-in encryption support for sensitive data
-- 📊 **Advanced Indexing**: Support for single and composite indexes
+- 📊 **Advanced Indexing**: Support for single, composite, and unique indexes
 - 🔄 **Real-time Updates**: Reactive queries with change notifications
 - 🎯 **Type Safety**: Strong typing with code generation
 - 📱 **Cross-Platform**: Works on all platforms supported by Dart/Flutter
@@ -23,6 +29,193 @@ QuantaDB is a modern, high-performance **NoSQL** local database built entirely i
 - 🔄 **Transaction Support**: ACID compliant transactions
 - 📈 **Scalability**: Efficient handling of large datasets
 - 🛠 **Developer Experience**: Annotation-driven code generation
+- 🔄 **Schema Migrations**: Automatic schema version management
+- ✅ **Field Validation**: Built-in validation with custom rules
+- 🔐 **Access Control**: Field-level visibility control
+- 🔄 **Relationships**: Support for one-to-many and many-to-many relationships
+
+## Installation
+
+Add this to your package's `pubspec.yaml` file:
+
+```yaml
+dependencies:
+  quanta_db: ^0.0.5
+```
+
+You can install packages from the command line:
+
+```bash
+$ dart pub get
+```
+
+## Quick Start
+
+```dart
+import 'package:quanta_db/quanta_db.dart';
+
+void main() async {
+  // Open the database
+  final db = await QuantaDB.open('my_database');
+
+  // Define your model
+  @QuantaEntity(version: 1)
+  class User {
+    @QuantaId()
+    final String id;
+
+    @QuantaField(required: true)
+    final String name;
+
+    @QuantaIndex()
+    final String email;
+
+    User({required this.id, required this.name, required this.email});
+  }
+
+  // Create a DAO
+  final userDao = UserDao(db);
+
+  // Insert data
+  final user = User(id: '1', name: 'John', email: 'john@example.com');
+  await userDao.insert(user);
+
+  // Query data
+  final users = await userDao.getAll();
+  print('Users: $users');
+
+  // Close the database
+  await db.close();
+}
+```
+
+## Usage
+
+### Basic Operations
+
+```dart
+// Open database
+final db = await QuantaDB.open('my_database');
+
+// Put data
+await db.put('key', {'name': 'value'});
+
+// Get data
+final data = await db.get('key');
+
+// Delete data
+await db.delete('key');
+
+// Close database
+await db.close();
+```
+
+### Using Annotations
+
+QuantaDB provides a rich set of annotations for defining your data models:
+
+#### Entity Annotations
+
+```dart
+@QuantaEntity(version: 1)
+class User {
+  @QuantaId()
+  final String id;
+
+  @QuantaField(required: true)
+  final String name;
+}
+```
+
+#### Index Annotations
+
+```dart
+@QuantaIndex()
+final String email;
+
+@QuantaCompositeIndex(fields: ['firstName', 'lastName'])
+final String fullName;
+```
+
+#### Relationship Annotations
+
+```dart
+@QuantaHasMany(targetEntity: Post, foreignKey: 'userId')
+final List<Post> posts;
+
+@QuantaManyToMany(targetEntity: Group)
+final List<Group> groups;
+```
+
+### Type Support
+
+The code generator supports a comprehensive range of data types:
+
+#### Primitive Types
+
+```dart
+final String name;
+final int age;
+final double score;
+final bool isActive;
+final DateTime createdAt;
+```
+
+#### Complex Types
+
+```dart
+final List<String> tags;
+final Map<String, dynamic> metadata;
+final Set<String> permissions;
+```
+
+#### Enums
+
+```dart
+enum UserType { admin, user, guest }
+
+final UserType? userType;
+```
+
+### Field Validation
+
+```dart
+@QuantaField(
+  required: true,
+  min: 0,
+  max: 120,
+  pattern: r'^[a-zA-Z]+$'
+)
+final String name;
+```
+
+### Reactive Fields
+
+```dart
+@QuantaReactive()
+final DateTime lastLogin;
+
+// Watch for changes
+final stream = userDao.watchLastLogin(user);
+await for (final lastLogin in stream) {
+  print('User logged in at: $lastLogin');
+}
+```
+
+## Performance
+
+QuantaDB is designed for speed. Here are benchmark results comparing QuantaDB's performance for 10,000 operations:
+
+| Operation | QuantaDB | Hive  | SQLite |
+| --------- | -------- | ----- | ------ |
+| Write     | 30ms     | 216ms | 3290ms |
+| Read      | 9ms      | 8ms   | 299ms  |
+| Batch     | 15ms     | 180ms | 2800ms |
+| Query     | 25ms     | 45ms  | 150ms  |
+
+**As you can see, QuantaDB demonstrates significantly faster performance across all operations.**
+
+**[Check out the benchmark code here](https://github.com/champ96k/quanta_db/blob/master/example/demo_example/lib/complete_example.dart)** to run it yourself and see the details.
 
 ## Why QuantaDB?
 
@@ -63,196 +256,28 @@ Here's a diagram illustrating the typical data flow within QuantaDB:
 - Read operations utilize Bloom Filters and the MemTable before hitting SSTables.
 - Compaction runs in the background to merge and optimize SSTables.
 
-## 🔥 Performance Benchmarks 🔥
+## Additional Information
 
-QuantaDB is designed for speed. Below are benchmark results comparing QuantaDB's performance for 10,000 write and read operations against other popular Dart/Flutter local databases (Hive and SQLite). These benchmarks were run on a specific environment and may vary, but they demonstrate QuantaDB's significant performance advantage, especially for write operations.
-
-### Basic Operations
-
-| Database | Operation | Total Operations | Total Time |
-| -------- | --------- | ---------------- | ---------- |
-| QuantaDB | Write     | 10000            | 30ms       |
-| QuantaDB | Read      | 10000            | 9ms        |
-| Hive     | Write     | 10000            | 216ms      |
-| Hive     | Read      | 10000            | 8ms        |
-| SQLite   | Write     | 10000            | 3290ms     |
-| SQLite   | Read      | 10000            | 299ms      |
-
-### Advanced Operations
-
-| Operation Type           | QuantaDB | Hive  | SQLite |
-| ------------------------ | -------- | ----- | ------ |
-| Batch Write (1000 items) | 15ms     | 180ms | 2800ms |
-| Complex Query            | 25ms     | 45ms  | 150ms  |
-| Index Creation           | 10ms     | 30ms  | 100ms  |
-| Transaction              | 5ms      | 20ms  | 80ms   |
-
-**As you can see, QuantaDB demonstrates significantly faster performance across all operations.**
-
-**[Check out the benchmark code here](https://github.com/champ96k/quanta_db/blob/master/example/demo_example/lib/complete_example.dart)** to run it yourself and see the details.
-
-## 🔒 Security
-
-QuantaDB takes security seriously:
-
-- **Data Encryption**: Optional field-level encryption
-- **Secure Storage**: Platform-specific secure directory management
-- **Access Control**: Built-in support for access control lists
-- **Data Validation**: Runtime and compile-time validation
-- **Audit Logging**: Optional operation logging
-
-## Getting Started
-
-### Installation
-
-1. **Depend on it**
-
-Add this to your package's `pubspec.yaml` file:
-
-```yaml
-dependencies:
-  quanta_db: ^0.0.5
-```
-
-2. **Install it**
-
-You can install packages from the command line:
-
-```bash
-$ dart pub get
-```
-
-3. **Import it**
-
-Now in your Dart code, you can use:
-
-```dart
-import 'package:quanta_db/quanta_db.dart';
-```
-
-### Usage
-
-Import the package and open a database. QuantaDB automatically handles platform-specific secure directory management for both Flutter and pure Dart environments.
-
-```dart
-import 'package:quanta_db/quanta_db.dart';
-
-void main() async {
-  // Open the database
-  // The database files will be stored in a platform-specific secure location
-  final db = await QuantaDB.open('my_database');
-
-  // Put some data
-  await db.put('my_key', {'name': 'Quanta', 'version': 1.0});
-
-  // Get data
-  final data = await db.get('my_key');
-  print('Retrieved data: $data');
-
-  // Update data
-  await db.put('my_key', {'name': 'QuantaDB', 'version': 1.1});
-  final updatedData = await db.get('my_key');
-  print('Updated data: $updatedData');
-
-  // Delete data
-  await db.delete('my_key');
-  final deletedData = await db.get('my_key');
-  print('Deleted data: $deletedData');
-
-  // Close the database
-  await db.close();
-}
-```
-
-**Tips:**
-
-- QuantaDB is a **NoSQL** database, using a key-value store model based on LSM-Trees.
-- Data is stored using a custom binary serialization format (DartBson).
-- Directory management is handled automatically for different platforms, ensuring secure storage locations.
-
-## Features in Detail
-
-### Automatic Schema Migrations
-
-QuantaDB automatically handles schema changes:
-
-```dart
-@QuantaEntity()
-class User {
-  final String id;
-  final String name;
-  final String email;
-  // Add new fields as needed
-  final String? phone; // New field
-}
-```
-
-The migration will be generated automatically when you run:
-
-```bash
-dart run build_runner build
-```
-
-### Encryption
-
-Secure sensitive data with field-level encryption:
-
-```dart
-@QuantaEntity()
-class User {
-  @QuantaEncrypted()
-  final String password;
-}
-```
-
-### Reactive Fields
-
-Get real-time updates for specific fields:
-
-```dart
-@QuantaEntity()
-class User {
-  @QuantaReactive()
-  final DateTime lastLogin;
-}
-
-// Watch for changes
-final stream = userDao.watchLastLogin(user);
-await for (final lastLogin in stream) {
-  print('User logged in at: $lastLogin');
-}
-```
+- [Documentation](https://quantadb.netlify.app/)
+- [API Reference](https://pub.dev/documentation/quanta_db/latest/)
+- [GitHub Repository](https://github.com/champ96k/quanta_db)
+- [Issue Tracker](https://github.com/champ96k/quanta_db/issues)
+- [Discussions](https://github.com/champ96k/quanta_db/discussions)
 
 ## Contributing
 
-We welcome contributions! Please see the [CONTRIBUTING.md](https://github.com/champ96k/quanta_db/blob/master/CONTRIBUTING.md) for details.
-
-### Contributors
-
-<a href="https://github.com/champ96k/quanta_db/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=champ96k/quanta_db" />
-</a>
-
-## Creator
-
-- **Tushar Nikam** - [LinkedIn](https://www.linkedin.com/in/tushar-nikam-dev/)
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+- **Tushar Nikam** - [LinkedIn](https://www.linkedin.com/in/tushar-nikam-dev/)
 
 ---
 
-## 💬 Support
-
-Need help? Here are some ways to get support:
-
-- 📚 [Documentation](https://quantadb.netlify.app/)
-- 📦 [Pub Package](https://pub.dev/packages/quanta_db)
-- 💡 [Discussions](https://github.com/champ96k/quanta_db/discussions)
-- 🐛 [Issue Tracker](https://github.com/champ96k/quanta_db/issues)
-- 💻 [Stack Overflow](https://stackoverflow.com/questions/tagged/quanta-db)
-
-_Note: This project is currently under active development. Features and APIs may change._
+Made with ❤️ by the QuantaDB Team
 
 ![Visitor Count](https://visitor-badge.laobi.icu/badge?page_id=champ96k.quanta_db)
