@@ -1,4 +1,8 @@
 # Changelog
+## 0.0.7
+
+- publisher added
+
 
 ## 0.0.6
 
