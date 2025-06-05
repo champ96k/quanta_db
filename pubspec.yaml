@@ -27,6 +27,7 @@ dependencies:
   # Annotation support for code generation
   path: ">=1.8.3 <2.0.0"
   meta: ">=1.12.0 <2.0.0"
+  build: ">=2.4.0 <3.0.0"
 
   # Platform-specific file system access
   path_provider: ">=2.1.2 <3.0.0"
