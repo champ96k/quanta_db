@@ -292,9 +292,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   <img src="https://img.shields.io/github/issues-closed/champ96k/quanta_db" alt="Closed Issues" />
 </a>
 
-<a href="https://github.com/champ96k/quanta_db/issues">
-  <img src="https://img.shields.io/github/issues-open/champ96k/quanta_db" alt="Open Issues" />
-</a>
 
 <br>
 
