@@ -10,6 +10,49 @@ part of 'user.dart';
 // QuantaGenerator
 // **************************************************************************
 
+extension UserJsonExtension on User {
+  static User fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      email: json['email'] as String,
+      isActive: json['isActive'] as bool,
+      lastLogin: DateTime.parse(json['lastLogin'] as String),
+      userType: UserType.values.firstWhere((e) => e.name == json['userType']),
+      roles: (json['roles'] as List).map((e) => e as String).toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'isActive': isActive,
+      'lastLogin': lastLogin.toIso8601String(),
+      'userType': userType?.name,
+      'roles': roles,
+    };
+  }
+
+  String toDebugString() {
+    final fields = [
+      'id: $id',
+      'name: $name',
+      'email: $email',
+      'isActive: $isActive',
+      'lastLogin: $lastLogin',
+      'userType: $userType',
+      'roles: $roles',
+    ].join(", ");
+    return "User($fields)";
+  }
+}
+
+// **************************************************************************
+// QuantaGenerator
+// **************************************************************************
+
 class UserAdapter {
   static const int schemaVersion = 1;
   static String? validate(User instance) {
@@ -41,6 +84,16 @@ class UserAdapter {
       errors['lastLogin'] = lastLoginError;
     }
 
+    final userTypeError = FieldValidator.validate(instance.userType, []);
+    if (userTypeError != null) {
+      errors['userType'] = userTypeError;
+    }
+
+    final rolesError = FieldValidator.validate(instance.roles, []);
+    if (rolesError != null) {
+      errors['roles'] = rolesError;
+    }
+
     return errors.isEmpty ? null : errors.toString();
   }
 
@@ -49,23 +102,12 @@ class UserAdapter {
     if (validationError != null) {
       throw ValidationException(validationError);
     }
-
-    return {
-      'id': instance.id,
-      'name': instance.name,
-      'email': instance.email,
-      'isActive': instance.isActive,
-      'lastLogin': instance.lastLogin,
-    };
+    return instance.toJson();
   }
 
-  static Future<User> fromJson(Map<String, dynamic> json) async => User(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        email: json['email'] as String,
-        isActive: json['isActive'] as bool,
-        lastLogin: json['lastLogin'] as DateTime,
-      );
+  static Future<User> fromJson(Map<String, dynamic> json) async {
+    return UserJsonExtension.fromJson(json);
+  }
 }
 
 class UserDao {
@@ -75,7 +117,16 @@ class UserDao {
 
   Future<void> insert(User instance) async {
     final json = await UserAdapter.toJson(instance);
-    await _db.put(instance.id, json);
+    String id = instance.id;
+
+    // Handle auto-generated IDs
+    if (id.isEmpty) {
+      final entityPrefix = 'user_';
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      id = entityPrefix + timestamp.toString();
+    }
+
+    await _db.put(id, json);
   }
 
   Future<User?> getById(String id) async {

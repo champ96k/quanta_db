@@ -1,166 +1,125 @@
 ---
 id: schema_versioning
 title: Schema Versioning
-sidebar_position: 13
+sidebar_position: 6
 ---
 
 # Schema Versioning
 
+QuantaDB provides automatic schema versioning and migration support through its code generation system.
 
-:::caution Important Note
-You don't need to write any migration code manually! The schema versioning system is fully automated. When you make changes to your model classes, QuantaDB automatically.
-:::
+## Basic Usage
 
-
-The examples below are for understanding how the system works internally, but in practice, you'll never need to write any of this code yourself.
-
-QuantaDB provides a robust schema versioning system that automatically manages database schema evolution through migrations.
-
-## Overview
-
-The schema versioning system automatically:
-- Tracks schema changes over time
-- Generates migration files
-- Executes migrations in sequence
-- Rolls back to previous versions
-- Maintains migration history
-- Manages migrations through a central registry
-
-## How It Works Internally
-
-> **Note**: The following sections explain how the system works internally. You don't need to write any of this code - it's all handled automatically by QuantaDB.
-
-### 1. SchemaVersionManager
-
-The core class that manages everything internally:
+Simply specify the version in your `@QuantaEntity` annotation:
 
 ```dart
-// Internal implementation - you don't need to write this
-class SchemaVersionManager {
-  final SchemaStorage _storage;
-  
-  // All version management is handled automatically
-  Future<void> migrateTo(int version) async {
-    // Automatic migration logic
-  }
-}
-```
-
-### 2. Migration Registry
-
-The central registry that manages all migrations automatically:
-
-```dart
-// Internal implementation - you don't need to write this
-class MigrationRegistry {
-  static final Map<String, SchemaMigration> _migrations = {};
-  
-  // Migrations are registered automatically
-  static void register(String name, SchemaMigration migration) {
-    _migrations[name] = migration;
-  }
-}
-```
-
-### 3. Schema Storage
-
-The storage layer that handles all schema persistence:
-
-```dart
-// Internal implementation - you don't need to write this
-class SchemaStorage {
-  final LSMStorage _storage;
-  
-  // All schema storage is handled automatically
-  Future<void> putSchema(String table, Map<String, dynamic> schema) async {
-    await _storage.put('$table:schema', schema);
-  }
-}
-```
-
-### 4. Migration Builder
-
-The system that automatically generates all migration code:
-
-```dart
-// Internal implementation - you don't need to write this
-class MigrationBuilder {
-  // All migration code is generated automatically
-  Future<void> buildMigration(String name, Map<String, dynamic> changes) async {
-    // Automatic code generation
-  }
-}
-```
-
-## What You Actually Need to Do
-
-As a developer, you only need to:
-
-1. Define your model classes
-2. Make changes to your models when needed
-3. Let QuantaDB handle everything else automatically
-
-Example of what you actually write:
-
-```dart
-// This is all you need to write
-@QuantaEntity
+@QuantaEntity(version: 1)
 class User {
   final String id;
   final String name;
   final String email;
-  
-  // Add or modify fields as needed
-  // QuantaDB handles all migrations automatically
 }
 ```
 
-## Internal Architecture
+When you need to make changes, increment the version:
 
-> **Note**: The following sections explain the internal architecture. This is all handled automatically by QuantaDB.
+```dart
+@QuantaEntity(version: 2)
+class User {
+  final String id;
+  final String name;
+  final String email;
+  final String? phone;  // New field
+}
+```
 
-### Schema Storage Features
-- Persistent schema storage
-- Version tracking
-- Schema validation
-- Change detection
-- Atomic operations
+## Automatic Migrations
 
-### Migration Builder Features
-- Automatic code generation
-- Schema diff analysis
-- Safe migration paths
-- Rollback generation
-- Type-safe migrations
+QuantaDB automatically handles schema changes:
 
-## Error Handling
+1. **Field Additions**: New fields are added with their default values
+2. **Field Removals**: Removed fields are safely dropped
+3. **Type Changes**: Type conversions are handled automatically
+4. **Index Updates**: Indexes are updated to reflect schema changes
 
-The system automatically handles:
-- Migration failures
-- Rollback procedures
-- Version consistency
-- Data integrity
+## Migration Process
 
-## Performance Considerations
+1. **Version Detection**: QuantaDB detects schema version changes
+2. **Schema Analysis**: Changes are analyzed automatically
+3. **Migration Generation**: Migration code is generated
+4. **Data Migration**: Data is migrated to the new schema
+5. **Version Update**: Schema version is updated
 
-Everything is optimized automatically:
-- Background migrations
-- Optimized version checks
-- Cached history queries
-- Batched rollback operations
+## Example
+
+```dart
+// Version 1
+@QuantaEntity(version: 1)
+class User {
+  final String id;
+  final String name;
+  final String email;
+}
+
+// Version 2 - Adding a new field
+@QuantaEntity(version: 2)
+class User {
+  final String id;
+  final String name;
+  final String email;
+  final String? phone;  // New optional field
+}
+
+// Version 3 - Modifying a field
+@QuantaEntity(version: 3)
+class User {
+  final String id;
+  final String name;
+  final String email;
+  final String? phone;
+  final DateTime createdAt;  // New required field
+}
+```
+
+## Migration Features
+
+- **Automatic Version Tracking**: Schema versions are tracked automatically
+- **Safe Migrations**: All migrations are performed safely with rollback support
+- **Type Safety**: Migrations are type-safe and validated at compile time
+- **Performance**: Migrations are optimized for performance
+- **Atomic Operations**: All migrations are atomic
+
+## Best Practices
+
+1. **Version Management**
+   - Increment version for any schema changes
+   - Document changes in version comments
+   - Test migrations thoroughly
+
+2. **Field Changes**
+   - Add new fields as nullable when possible
+   - Provide default values for required fields
+   - Consider backward compatibility
+
+3. **Migration Testing**
+   - Test migrations with real data
+   - Verify data integrity after migration
+   - Test rollback scenarios
+
+4. **Performance**
+   - Migrate data in batches for large datasets
+   - Schedule migrations during low-usage periods
+   - Monitor migration progress
 
 ## Limitations
 
-The system automatically handles:
-- Sequential migration execution
-- Rollback implementation
-- Complex schema changes
-- Large dataset migrations
+- Migrations must be sequential
+- Complex schema changes may require manual intervention
+- Large datasets may take time to migrate
 
 ## Future Enhancements
 
-Planned automatic improvements:
-- Parallel migration execution
-- Schema diff visualization
-- Migration conflict resolution
-- Enhanced rollback capabilities
+- Parallel migration support
+- Custom migration scripts
+- Migration preview and validation
+- Migration progress tracking

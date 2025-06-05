@@ -32,11 +32,10 @@ dependencies:
   path_provider: ">=2.1.2 <3.0.0"
 
   # Build system for code generation
-  build: ^2.4.1
-  source_gen: ">=1.5.0 <3.0.0"
+  source_gen: ^1.4.0
 
   # Dart code analysis and parsing
-  analyzer: ">=6.4.1 <8.0.0"
+  analyzer: ">=5.13.0 <7.0.0"
 
 dev_dependencies:
   flutter_test:

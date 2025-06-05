@@ -8,7 +8,16 @@ class QuantaEntity {
 
 /// Annotation to mark a field as the primary key
 class QuantaId {
-  const QuantaId();
+  const QuantaId({
+    this.autoGenerate = false,
+    this.prefix,
+  });
+
+  /// Whether to automatically generate the ID
+  final bool autoGenerate;
+
+  /// Optional prefix for the generated ID
+  final String? prefix;
 }
 
 /// Annotation to mark a field as indexed

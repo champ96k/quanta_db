@@ -20,7 +20,7 @@ enum BsonType {
 
 /// DartBson - A binary serialization format optimized for Dart
 class DartBson {
-  DartBson();
+  DartBson._();
   static const int typeNull = 0x00;
   static const int typeBool = 0x01;
   static const int typeInt = 0x02;
