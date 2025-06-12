@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:async';
 import 'dart:isolate';
 
@@ -161,6 +159,7 @@ class QueryEngine {
         .transform(_createSortTransformer(query.sorts))
         .transform(_createPaginationTransformer(query.limit, query.offset))
         .handleError((error) {
+      // ignore: avoid_print
       print('Error in watch stream: $error');
       throw QueryException('Failed to watch query: $error');
     });

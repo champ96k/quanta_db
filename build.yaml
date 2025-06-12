@@ -1,14 +1,12 @@
 targets:
   $default:
     builders:
-      quanta_db|quanta_generator:
+      quanta_db:quanta_builder:
         enabled: true
         generate_for:
-          include:
-            - lib/**.dart
           exclude:
-            - lib/annotations/**.dart
-            - lib/src/generator/**.dart
+            - lib/annotations/**
+            - lib/src/generator/**
       quanta_db|migration_builder:
         enabled: true
         generate_for:
@@ -19,14 +17,13 @@ targets:
             - lib/src/generator/**.dart
 
 builders:
-  quanta_generator:
+  quanta_builder:
     import: "package:quanta_db/builder.dart"
     builder_factories: ["quantaBuilder"]
-    build_extensions: { ".dart": [".quanta.g.dart"] }
+    build_extensions: {".dart": [".quanta.g.dart"]}
     auto_apply: root_package
     build_to: source
     required_inputs: [".dart"]
-    runs_before: ["build_web_compilers|entrypoint"]
   migration_builder:
     import: "package:quanta_db/src/builders/migration_builder.dart"
     builder_factories: ["migrationBuilder"]

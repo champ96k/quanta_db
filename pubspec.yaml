@@ -3,7 +3,7 @@ description: "A high-performance pure Dart database implementation using LSM-Tre
 version: 0.0.7
 homepage: https://github.com/champ96k/quanta_db
 repository: https://github.com/champ96k/quanta_db
-publisher: champ96k.com
+publish_to: none
 
 topics:
   - database
@@ -26,19 +26,17 @@ dependencies:
   # Optimized data structures and algorithms
   collection: ^1.18.0
 
-  # Annotation support for code generation
+  # Core utilities
   path: ">=1.8.3 <2.0.0"
   meta: ">=1.12.0 <2.0.0"
-  build: ">=2.4.0 <3.0.0"
 
   # Platform-specific file system access
   path_provider: ">=2.1.2 <3.0.0"
 
-  # Build system for code generation
-  source_gen: ^1.4.0
-
-  # Dart code analysis and parsing
-  analyzer: ">=5.13.0 <7.0.0"
+  # Code generation dependencies
+  build: ">=2.4.0 <3.0.0"
+  source_gen: ^2.0.0
+  analyzer: ^6.11.0
 
 dev_dependencies:
   flutter_test:
@@ -51,3 +49,12 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+
+# Platform support declarations
+platforms:
+  android:
+  ios:
+  web:
+  windows:
+  linux:
+  macos:

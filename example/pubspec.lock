@@ -510,11 +510,10 @@ packages:
   quanta_db:
     dependency: "direct main"
     description:
-      name: quanta_db
-      sha256: "0ca72f4790c77f9de23aabcb23b40fa517f8196de20320054d0a84678fbb1ab6"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.4"
+      path: ".."
+      relative: true
+    source: path
+    version: "0.0.7"
   shelf:
     dependency: transitive
     description:

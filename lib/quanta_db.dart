@@ -26,5 +26,4 @@ export 'package:quanta_db/src/storage/schema_storage.dart';
 export 'package:quanta_db/src/schema/schema_migration.dart';
 export 'package:quanta_db/src/schema/schema_version_manager.dart';
 
-export 'package:quanta_db/builder.dart';
 export 'dart:math';
