@@ -10,25 +10,41 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.22.2"
           channel: "stable"
+          cache: true
 
       - name: Install dependencies
-        run: flutter pub get
+        run: |
+          flutter pub get
+          cd example && flutter pub get
 
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed lib/
+        run: |
+          dart format --output=none --set-exit-if-changed lib/
+          dart format --output=none --set-exit-if-changed example/lib/
+          dart format --output=none --set-exit-if-changed test/
 
       - name: Analyze project source
-        run: dart analyze lib/
+        run: |
+          dart analyze lib/
+          dart analyze example/lib/
+          dart analyze test/
 
       - name: Run tests
-        run: flutter test
+        run: |
+          flutter test
+          cd example && flutter test
+
+      - name: Run build_runner
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          cd example && dart run build_runner build --delete-conflicting-outputs
 
   # This job ensures all previous jobs passed
   verify-checks:

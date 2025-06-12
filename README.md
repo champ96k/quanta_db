@@ -1,5 +1,9 @@
 # QuantaDB
 
+[![Sponsor](https://img.shields.io/badge/Sponsor-%F0%9F%92%96-blueviolet)](https://github.com/sponsors/champ96k)
+
+<iframe src="https://github.com/sponsors/champ96k/button" title="Sponsor champ96k" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
+
 [![Pub Version](https://img.shields.io/pub/v/quanta_db.svg)](https://pub.dev/packages/quanta_db)
 [![License](https://img.shields.io/github/license/champ96k/quanta_db)](https://github.com/champ96k/quanta_db/blob/master/LICENSE)
 [![Dart CI](https://github.com/champ96k/quanta_db/actions/workflows/dart.yml/badge.svg)](https://github.com/champ96k/quanta_db/actions/workflows/dart.yml)
@@ -279,11 +283,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contributors
 
 ### Code Contributors
+
 <a href="https://github.com/champ96k/quanta_db/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=champ96k/quanta_db" />
 </a>
 
 ### Issue Contributors
+
 <a href="https://github.com/champ96k/quanta_db/issues">
   <img src="https://img.shields.io/github/issues/champ96k/quanta_db" alt="Total Issues" />
 </a>
@@ -291,7 +297,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <a href="https://github.com/champ96k/quanta_db/issues?q=is%3Aissue+is%3Aclosed">
   <img src="https://img.shields.io/github/issues-closed/champ96k/quanta_db" alt="Closed Issues" />
 </a>
-
 
 <br>
 

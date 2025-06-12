@@ -5,6 +5,9 @@
 [![Dart CI](https://github.com/champ96k/quanta_db/actions/workflows/dart.yml/badge.svg)](https://github.com/champ96k/quanta_db/actions/workflows/dart.yml)
 [![codecov](https://codecov.io/gh/champ96k/quanta_db/branch/master/graph/badge.svg)](https://codecov.io/gh/champ96k/quanta_db)
 [![Documentation](https://img.shields.io/badge/Documentation-API-blue)](https://quantadb.netlify.app/)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%F0%9F%92%96-blueviolet)](https://github.com/sponsors/champ96k)
+
+<iframe src="https://github.com/sponsors/champ96k/button" title="Sponsor champ96k" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
 
 This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 
