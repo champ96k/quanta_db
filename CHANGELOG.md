@@ -1,6 +1,7 @@
-## 0.0.8 (2024-03-19)
+## 0.0.8
 
 ### Changes
+
 - Fixed code generation dependencies by moving them to main dependencies section
 - Removed invalid publisher field from pubspec.yaml
 - Added automated publish script for version management
@@ -11,7 +12,6 @@
 ## 0.0.7
 
 - publisher added
-
 
 ## 0.0.6
 
