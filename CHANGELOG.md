@@ -1,8 +1,13 @@
-## 0.0.8 (2025-06-12)
+## 0.0.8 (2024-03-19)
 
 ### Changes
+- Fixed code generation dependencies by moving them to main dependencies section
+- Removed invalid publisher field from pubspec.yaml
+- Added automated publish script for version management
+- Fixed platform support declarations in pubspec.yaml
+- Improved code generation for entity models
+- Added proper part directives for generated code
 
-# Changelog
 ## 0.0.7
 
 - publisher added
