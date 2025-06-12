@@ -1,11 +1,9 @@
 name: quanta_db
 description: "A high-performance pure Dart database implementation using LSM-Tree architecture."
 version: 0.0.8
-homepage: https://champ96k.com
+homepage: https://quantadb.netlify.app
 repository: https://github.com/champ96k/quanta_db
-documentation: https://quantadb.netlify.app/
 publish_to: https://pub.dev/publishers/champ96k.com/packages
-issue_tracker: https://github.com/champ96k/quanta_db/issues
 
 topics:
   - database
@@ -62,5 +60,5 @@ platforms:
   macos:
 
 screenshots:
-  - description: "Basic usage of fpdart Option, Either, TaskEither types."
+  - description: "QuantaDB - A high-performance LSM-Tree based database for Flutter"
     path: logo.png
