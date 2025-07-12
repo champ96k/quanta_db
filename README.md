@@ -1,12 +1,14 @@
 # QuantaDB
 
+
+<a href="https://www.producthunt.com/products/quantadb-local-db-for-flutter-and-dart?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-quantadb&#0045;local&#0045;db&#0045;for&#0045;flutter&#0045;and&#0045;dart" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=991948&theme=light&t=1752344810736" alt="QuantaDB&#0032;local&#0032;DB&#0032;for&#0032;flutter&#0032;and&#0032;dart&#0032; - A&#0032;high&#0045;performance&#0044;&#0032;type&#0045;safe&#0032;NoSQL&#0032;db&#0032;for&#0032;Dart&#0032;and&#0032;Flutter | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+
+
 [![Sponsor](https://img.shields.io/badge/Sponsor-%F0%9F%92%96-blueviolet)](https://github.com/sponsors/champ96k)
 
-<iframe src="https://github.com/sponsors/champ96k/button" title="Sponsor champ96k" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
 
 [![Pub Version](https://img.shields.io/pub/v/quanta_db.svg)](https://pub.dev/packages/quanta_db)
 [![License](https://img.shields.io/github/license/champ96k/quanta_db)](https://github.com/champ96k/quanta_db/blob/master/LICENSE)
-[![Dart CI](https://github.com/champ96k/quanta_db/actions/workflows/dart.yml/badge.svg)](https://github.com/champ96k/quanta_db/actions/workflows/dart.yml)
 [![codecov](https://codecov.io/gh/champ96k/quanta_db/branch/master/graph/badge.svg)](https://codecov.io/gh/champ96k/quanta_db)
 [![Documentation](https://img.shields.io/badge/Documentation-API-blue)](https://quantadb.netlify.app/)
 
