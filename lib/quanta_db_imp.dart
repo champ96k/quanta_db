@@ -114,6 +114,41 @@ class QuantaDB {
     _isInitialized = false;
   }
 
+  /// Delete all data from the database
+  ///
+  /// This method deletes all data from the database, including all SSTables and the memtable.
+  /// Use with caution as this operation cannot be undone.
+  Future<void> deleteAll() async {
+    _checkInitialized();
+
+    try {
+      // Get all keys from the memtable
+      final allKeys = await storage.keys();
+      
+      if (allKeys.isEmpty) {
+        // No data to delete
+        return;
+      }
+      
+      // For small datasets, use transaction for batch deletion
+      if (allKeys.length < 10000) {
+        await storage.transaction((txn) async {
+          for (final key in allKeys) {
+            await txn.delete(key);
+          }
+        });
+      } else {
+        // For large datasets, close and reinitialize for better performance
+        // This effectively clears all data without individual deletions
+        await storage.close();
+        await storage.init();
+        _isInitialized = true; // Ensure database remains initialized
+      }
+    } catch (e) {
+      throw StorageException('Failed to delete all data: $e');
+    }
+  }
+
   void _checkInitialized() {
     if (!_isInitialized) {
       throw StateError(

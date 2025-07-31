@@ -118,4 +118,22 @@ Future<void> _demonstrateCRUD(QuantaDB db) async {
 
 The `delete` method removes the key-value pair associated with the given key.
 
+### Delete All
+
+To remove all data from the database, use the `deleteAll` method. This is useful for scenarios like logging out a user, clearing cache, or resetting the application state.
+
+```dart
+// Example of deleting all data from the database
+Future<void> _demonstrateDeleteAll(QuantaDB db) async {
+  print('Deleting all data from the database...');
+  
+  // Call the deleteAll method
+  await db.deleteAll();
+  
+  print('All data has been deleted from the database');
+}
+```
+
+> ⚠️ **Warning**: The `deleteAll` method removes all data from the database. This operation cannot be undone, so use it with caution.
+
 These basic CRUD operations are the foundation for managing data in QuantaDB. In the next sections, we will explore more advanced topics like querying and transactions.

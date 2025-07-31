@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:async';
 import 'dart:io';
 
@@ -71,7 +73,6 @@ class LSMStorage {
           final sstable = await SSTable.load(file.path);
           _sstables.add(sstable);
         } catch (e) {
-          // ignore: avoid_print
           print('Error loading SSTable ${file.path}: $e');
           // Optionally delete corrupted files
           await file.delete();
@@ -307,8 +308,21 @@ class Transaction {
   /// Commit the transaction
   Future<void> commit() async {
     // Apply changes to the main storage
-    for (final entry in _memTable.entries.entries) {
-      await _storage.put(entry.key, entry.value);
+    for (final change in _changes) {
+      if (change.changeType == ChangeType.insert) {
+        await _storage.put(change.key, change.value);
+      } else if (change.changeType == ChangeType.delete) {
+        try {
+          // Check if key exists before deleting
+          final exists = await _storage.get(change.key) != null;
+          if (exists) {
+            await _storage.delete(change.key);
+          }
+        } catch (e) {
+          // Ignore errors for keys that don't exist
+          print('Warning: Failed to delete key ${change.key}: $e');
+        }
+      }
     }
   }
 

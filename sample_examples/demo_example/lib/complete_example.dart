@@ -38,6 +38,14 @@ void main() async {
     print('\n=== Example 6: Batch Operations ===');
     await _demonstrateBatchOperations(db);
 
+    // Example 7: Batch Delete Operations
+    print('\n=== Example 7: Batch Delete Operations ===');
+    await _demonstrateBatchDeleteOperations(db);
+
+    // Example 8: Delete All Operations
+    print('\n=== Example 8: Delete All Operations ===');
+    await _demonstrateDeleteAllOperations(db);
+
     // Clean up
     await db.close();
   } catch (e, stackTrace) {
@@ -348,5 +356,178 @@ Future<void> _demonstrateBatchOperations(QuantaDB db) async {
     }
   } catch (e) {
     print('Batch operation error: $e');
+  }
+}
+
+Future<void> _demonstrateBatchDeleteOperations(QuantaDB db) async {
+  try {
+    // First, create some users to delete
+    final users = {
+      'user:delete:1': User(
+        id: 'delete:1',
+        name: 'Delete User 1',
+        email: 'delete1@example.com',
+        isActive: true,
+        lastLogin: DateTime.now(),
+      ),
+      'user:delete:2': User(
+        id: 'delete:2',
+        name: 'Delete User 2',
+        email: 'delete2@example.com',
+        isActive: true,
+        lastLogin: DateTime.now(),
+      ),
+      'user:delete:3': User(
+        id: 'delete:3',
+        name: 'Delete User 3',
+        email: 'delete3@example.com',
+        isActive: true,
+        lastLogin: DateTime.now(),
+      ),
+    };
+
+    // Store all users in a single batch operation
+    print('Storing ${users.length} users for deletion demonstration...');
+    await db.storage.putAll(users);
+
+    // Verify users were created
+    for (final key in users.keys) {
+      final user = await db.get<User>(key);
+      print('Created user: ${user?.name}');
+    }
+
+    // Create a list of keys to delete
+    final keysToDelete = users.keys.toList();
+
+    // Delete all users in a batch using transaction
+    print(
+        'Deleting ${keysToDelete.length} users in batch using transaction...');
+    await db.storage.transaction((txn) async {
+      for (final key in keysToDelete) {
+        await txn.delete(key);
+      }
+    });
+    print('Batch delete operation completed successfully');
+
+    // Verify the deletion
+    for (final key in keysToDelete) {
+      final user = await db.get<User>(key);
+      print(
+          'User $key after deletion: ${user == null ? "Successfully deleted" : "Failed to delete"}');
+    }
+
+    // Demonstrate conditional batch delete using a query
+    // First create some more test users with different active states
+    final mixedUsers = {
+      'user:mixed:1': User(
+        id: 'mixed:1',
+        name: 'Mixed User 1',
+        email: 'mixed1@example.com',
+        isActive: true,
+        lastLogin: DateTime.now(),
+      ),
+      'user:mixed:2': User(
+        id: 'mixed:2',
+        name: 'Mixed User 2',
+        email: 'mixed2@example.com',
+        isActive: false, // Inactive user
+        lastLogin: DateTime.now(),
+      ),
+      'user:mixed:3': User(
+        id: 'mixed:3',
+        name: 'Mixed User 3',
+        email: 'mixed3@example.com',
+        isActive: true,
+        lastLogin: DateTime.now(),
+      ),
+    };
+
+    // Store the mixed users
+    await db.storage.putAll(mixedUsers);
+    print('Stored mixed users for conditional delete demonstration');
+
+    // Query to find only inactive users
+    final queryEngine = QueryEngine(db.storage);
+    final inactiveUsers = await queryEngine.query<User>(
+      Query<User>().where((user) => user.isActive == false),
+    );
+
+    // Extract keys of inactive users
+    final inactiveKeys =
+        inactiveUsers.map((user) => 'user:mixed:${user.id}').toList();
+
+    print('Found ${inactiveKeys.length} inactive users to delete');
+
+    // Delete only inactive users using transaction
+    if (inactiveKeys.isNotEmpty) {
+      await db.storage.transaction((txn) async {
+        for (final key in inactiveKeys) {
+          await txn.delete(key);
+        }
+      });
+      print('Successfully deleted inactive users');
+    }
+
+    // Verify only inactive users were deleted
+    for (final entry in mixedUsers.entries) {
+      final user = await db.get<User>(entry.key);
+      final originalUser = entry.value;
+      print(
+          'User ${entry.key}: ${user == null ? "Deleted" : "Still exists"} (was ${originalUser.isActive ? "active" : "inactive"})');
+    }
+  } catch (e) {
+    print('Batch delete operation error: $e');
+  }
+}
+
+Future<void> _demonstrateDeleteAllOperations(QuantaDB db) async {
+  try {
+    // First, create some users to delete
+    final users = {
+      'user:delete:1': User(
+        id: 'delete:1',
+        name: 'Delete User 1',
+        email: 'delete1@example.com',
+        isActive: true,
+        lastLogin: DateTime.now(),
+      ),
+      'user:delete:2': User(
+        id: 'delete:2',
+        name: 'Delete User 2',
+        email: 'delete2@example.com',
+        isActive: true,
+        lastLogin: DateTime.now(),
+      ),
+      'user:delete:3': User(
+        id: 'delete:3',
+        name: 'Delete User 3',
+        email: 'delete3@example.com',
+        isActive: true,
+        lastLogin: DateTime.now(),
+      ),
+    };
+
+    // Store all users in a single batch operation
+    print('Storing ${users.length} users for deletion demonstration...');
+    await db.storage.putAll(users);
+
+    // Verify users were created
+    for (final key in users.keys) {
+      final user = await db.get<User>(key);
+      print('Created user: ${user?.name}');
+    }
+
+    await db.deleteAll();
+    print('Delete all operation completed successfully');
+
+    // Verify all users were deleted
+    for (final key in users.keys) {
+      final user = await db.get<User>(key);
+      print("UserInfo : ${user?.name}");
+      print(
+          'User $key after delete all: ${user == null ? "Successfully deleted" : "Failed to delete"}');
+    }
+  } catch (e) {
+    print('Delete all operation error: $e');
   }
 }

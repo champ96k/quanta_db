@@ -36,6 +36,7 @@ A high-performance, type-safe NoSQL database for Dart and Flutter applications.
 - ✅ **Field Validation**: Built-in validation with custom rules
 - 🔐 **Access Control**: Field-level visibility control
 - 🔄 **Relationships**: Support for one-to-many and many-to-many relationships
+- 🧹 **Data Management**: Methods for complete database cleanup and reset
 
 ## Installation
 
