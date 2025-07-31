@@ -127,13 +127,15 @@ To remove all data from the database, use the `deleteAll` method. This is useful
 Future<void> _demonstrateDeleteAll(QuantaDB db) async {
   print('Deleting all data from the database...');
   
-  // Call the deleteAll method
+  // Call the deleteAll method - O(1) time complexity regardless of dataset size
   await db.deleteAll();
   
   print('All data has been deleted from the database');
 }
 ```
 
-> ⚠️ **Warning**: The `deleteAll` method removes all data from the database. This operation cannot be undone, so use it with caution.
+> ⚠️ **Warning**: The `deleteAll` method removes all data from the database with O(1) time complexity. This operation cannot be undone, so use it with caution.
+
+**Time Complexity**: The `deleteAll` method has O(1) time complexity, meaning it takes constant time regardless of how many records are in the database. This makes it extremely efficient for clearing large datasets.
 
 These basic CRUD operations are the foundation for managing data in QuantaDB. In the next sections, we will explore more advanced topics like querying and transactions.

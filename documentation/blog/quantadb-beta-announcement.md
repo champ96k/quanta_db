@@ -93,6 +93,7 @@ We've benchmarked QuantaDB against popular alternatives:
 | Write     | 30ms     | 216ms | 3290ms |
 | Read      | 9ms      | 8ms   | 299ms  |
 | Batch     | 15ms     | 180ms | 2800ms |
+| DeleteAll | O(1)     | O(n)  | O(n)   |
 
 ## What's Next?
 

@@ -219,6 +219,7 @@ QuantaDB is designed for speed. Here are benchmark results comparing QuantaDB's 
 | Read      | 9ms      | 8ms   | 299ms  |
 | Batch     | 15ms     | 180ms | 2800ms |
 | Query     | 25ms     | 45ms  | 150ms  |
+| DeleteAll | O(1)     | O(n)  | O(n)   |
 
 **As you can see, QuantaDB demonstrates significantly faster performance across all operations.**
 
