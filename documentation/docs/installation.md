@@ -8,7 +8,7 @@ To start using QuantaDB, add the dependency to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  quanta_db: ^0.0.6 # Use the latest version
+  quanta_db: ^0.0.9 # Use the latest version
 ```
 
 Then, run:

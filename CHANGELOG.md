@@ -1,3 +1,17 @@
+## 0.0.9
+
+### Features
+
+- Improved `deleteAll()` method to achieve O(1) time complexity for all dataset sizes
+- Updated documentation to reflect the performance improvements
+- Enhanced batch operations documentation with detailed examples
+
+### Documentation
+
+- Added performance comparison tables in README and documentation
+- Updated batch operations documentation with O(1) time complexity details
+- Improved CRUD documentation with performance notes
+
 ## 0.0.8
 
 ### Changes

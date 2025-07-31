@@ -1,6 +1,6 @@
 name: quanta_db
 description: "A high-performance pure Dart database implementation using LSM-Tree architecture."
-version: 0.0.8
+version: 0.0.9
 homepage: https://champ96k.com
 repository: https://github.com/champ96k/quanta_db
 documentation: https://quantadb.netlify.app/
